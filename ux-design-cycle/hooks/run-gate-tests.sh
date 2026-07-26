@@ -56,9 +56,13 @@ print(json.dumps({"tool_name": "Write", "tool_input": {"file_path": "ux-design/s
 }
 
 # --- (a) same-state write on a state with NO self-loop row -> DENY ------
+# idle has no self-loop row in transition-rules.md (only drafting|drafting
+# does); this now that root resolution genuinely reads root_a's own state
+# file rather than accidentally falling through to the real repo's (absent)
+# state file, as it silently did before this gate honored CLAUDE_PROJECT_DIR.
 root_a="$work/a"
-setup_root "$root_a" "drafting"
-payload_a="$(json_write "$root_a" "drafting" "collected_note: still gathering\n")"
+setup_root "$root_a" "idle"
+payload_a="$(json_write "$root_a" "idle" "collected_note: still gathering\n")"
 run_gate "$root_a" "$payload_a"
 code_a=$?
 if [ "$code_a" -ne 0 ]; then
@@ -234,26 +238,67 @@ else
   fail "(k) genuinely absent state file: (none) -> idle bootstrap row was DENIED (exit $code_k): $GATE_OUT"
 fi
 
-# --- (l) invoked from a cwd OUTSIDE the repo, CLAUDE_PROJECT_DIR unset ---
-# Root resolution must be anchored to the hook's own on-disk location, never
-# to the process cwd or CLAUDE_PROJECT_DIR. Run the SAME payload against the
-# real on-disk gate once from inside this repo's own checkout and once from
-# an unrelated outside directory, both with CLAUDE_PROJECT_DIR unset — the
-# two must reach the identical decision, proving the outside-cwd invocation
-# still resolved and judged this repo's own ux-design/state.md rather than
-# some other (or no) state file.
+# --- (l) CLAUDE_PROJECT_DIR unset: git-toplevel fallback -------------------
+# Per docs/proposals/2026-07-26-gate-root-from-project-dir.md §2(b): with
+# CLAUDE_PROJECT_DIR unset, root falls back to the git top-level of the
+# PreToolUse target path, else the git top-level of cwd.
 repo_root="$(cd "$hook_dir/../.." && pwd -P)"
 outside_dir="$(mktemp -d)"
 payload_l='{"tool_name":"Write","tool_input":{"file_path":"ux-design/state.md","content":"---\nstage: idle\nmetric: 7-day activation rate\nthreshold: >= 20%\n---\n"}}'
 out_in="$(cd "$repo_root" && env -u CLAUDE_PROJECT_DIR bash -c 'printf "%s" "$1" | "$2"' _ "$payload_l" "$gate" 2>&1)"
 code_in=$?
+if [ "$code_in" -eq 0 ]; then
+  pass "(l1) CLAUDE_PROJECT_DIR unset, invoked inside this repo — falls back to this repo's own git top-level and enforces normally (exit 0)"
+else
+  fail "(l1) CLAUDE_PROJECT_DIR unset, invoked inside this repo — expected exit 0 via git-toplevel fallback, got exit $code_in. Output: $out_in"
+fi
+
+# (l2) CLAUDE_PROJECT_DIR unset, cwd AND target both outside any git
+# work-tree -> root is indeterminate -> refused (never silently allowed).
 out_out="$(cd "$outside_dir" && env -u CLAUDE_PROJECT_DIR bash -c 'printf "%s" "$1" | "$2"' _ "$payload_l" "$gate" 2>&1)"
 code_out=$?
 rm -rf "$outside_dir"
-if [ "$code_in" -eq "$code_out" ]; then
-  pass "(l) invocation from outside the repo resolves the same repo root as invocation from inside it (exit $code_out matches exit $code_in)"
+if [ "$code_out" -ne 0 ]; then
+  pass "(l2) CLAUDE_PROJECT_DIR unset, cwd/target both outside any git work-tree — indeterminate root refused (exit $code_out)"
 else
-  fail "(l) invocation from outside the repo (exit $code_out) diverged from invocation from inside it (exit $code_in) — outside: $out_out | inside: $out_in"
+  fail "(l2) CLAUDE_PROJECT_DIR unset, cwd/target both outside any git work-tree — expected refused (non-zero), got exit 0. Output: $out_out"
+fi
+
+# --- (q) target-repo-governance: CLAUDE_PROJECT_DIR pointed at an
+# unrelated, empty (but plausible-looking, git-initialized) directory, and
+# the Write targets an owned-tree path that is ALSO not inside any git
+# work-tree -> root is genuinely indeterminate -> default-deny per §2(c),
+# not silently allowed.
+unrelated_dir="$(mktemp -d)"
+git init -q "$unrelated_dir" >/dev/null 2>&1
+non_git_target_dir="$(mktemp -d)"
+scratch_subject_q="gateroot-unrelated-projectdir-test"
+mkdir -p "$non_git_target_dir/docs/reports/records/$scratch_subject_q"
+payload_q="{\"tool_name\":\"Write\",\"tool_input\":{\"file_path\":\"$non_git_target_dir/docs/reports/records/$scratch_subject_q/ux-design.md\",\"content\":\"status: idle\\n\"}}"
+out_q="$(cd "$non_git_target_dir" && env CLAUDE_PROJECT_DIR="$unrelated_dir" bash -c 'printf "%s" "$1" | "$2"' _ "$payload_q" "$gate" 2>&1)"
+rc_q=$?
+rm -rf "$unrelated_dir" "$non_git_target_dir"
+if [ "$rc_q" -ne 0 ]; then
+  pass "(q) CLAUDE_PROJECT_DIR pointed at an unrelated empty dir, target's owned-tree write has no resolvable git root either — indeterminate root default-denied (exit $rc_q), not silently allowed"
+else
+  fail "(q) CLAUDE_PROJECT_DIR pointed at an unrelated empty dir, target has no resolvable git root — expected refused (default-deny), got exit 0 (silently allowed). Output: $out_q"
+fi
+
+# --- (r) target-repo-governance: CLAUDE_PROJECT_DIR correctly set (target
+# is under it, and it looks like a project root) -> gate enforced normally
+# against that SEPARATE target project, not against this rulebook repo.
+target_repo_r="$(mktemp -d)"
+mkdir -p "$target_repo_r/docs/specs"
+cp "$contract_src" "$target_repo_r/docs/specs/role-handoff-contract.md"
+payload_r="{\"tool_name\":\"Write\",\"tool_input\":{\"file_path\":\"$target_repo_r/ux-design/state.md\",\"content\":\"---\\nstage: shipped\\nmetric: 7-day activation rate\\nthreshold: >= 20%\\n---\\n\"}}"
+run_gate "$target_repo_r" "$payload_r"
+rc_r=$?
+out_r="$GATE_OUT"
+rm -rf "$target_repo_r"
+if [ "$rc_r" -ne 0 ]; then
+  pass "(r) valid CLAUDE_PROJECT_DIR pointed at a separate target project — illegal bootstrap write refused there (exit $rc_r)"
+else
+  fail "(r) valid CLAUDE_PROJECT_DIR pointed at a separate target project — expected refused, got exit 0. Output: $out_r"
 fi
 
 # --- (m) write-detection bypass fix (docs/proposals/2026-07-26-fix-state-gate-writeop-bypass.md)
