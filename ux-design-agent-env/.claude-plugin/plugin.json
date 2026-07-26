@@ -1,0 +1,11 @@
+{
+  "name": "ux-design-agent-env",
+  "version": "0.1.0",
+  "description": "One-install ux-design-role environment: pulls in ux-design-cycle as a dependency. Contains no code of its own.",
+  "author": {
+    "name": "Jung Jiwon & Lee Jongkwan"
+  },
+  "dependencies": [
+    "ux-design-cycle"
+  ]
+}

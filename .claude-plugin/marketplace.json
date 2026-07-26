@@ -1,0 +1,18 @@
+{
+  "name": "tokenmaxxxer-ux-design",
+  "owner": {
+    "name": "Jung Jiwon & Lee Jongkwan"
+  },
+  "plugins": [
+    {
+      "name": "ux-design-cycle",
+      "source": "./ux-design-cycle",
+      "description": "UX-design record state machine: idle -> drafting -> reviewed. Wakes after a new/changed product-record (or a chain-root hypothesis); the ux-design-record must carry a non-empty pointer to its governing hypothesis/product-record; reaching `loop_state: reviewed` is what wakes coding per contract \u00a73."
+    },
+    {
+      "name": "ux-design-agent-env",
+      "source": "./ux-design-agent-env",
+      "description": "One-install environment bundle: installs ux-design-cycle via dependency."
+    }
+  ]
+}
