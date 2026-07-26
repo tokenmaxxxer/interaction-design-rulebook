@@ -33,8 +33,23 @@ command -v python3 >/dev/null 2>&1 || {
 
 payload="$(cat 2>/dev/null || true)"
 
-UXD_PAYLOAD="$payload" UXD_ROOT="${CLAUDE_PROJECT_DIR:-$(pwd -P)}" python3 <<'PY'
+rc=0
+UXD_PAYLOAD="$payload" UXD_ROOT="${CLAUDE_PROJECT_DIR:-$(pwd -P)}" python3 <<'PY' || rc=$?
 import json, os, posixpath, re, sys
+
+# Fail-closed python layer: any uncaught exception (e.g. os.path.realpath on a
+# null-byte/undecodable path raising ValueError, which would otherwise exit 1
+# = fail-open) becomes exit 2 (DENY). SystemExit from allow()/deny() bypasses
+# this hook, so the real verdict paths are preserved exactly.
+def _uxd_fail_closed_excepthook(_t, _v, _tb):
+    try:
+        sys.stderr.write("ux-design-cycle: refused — fail-closed: internal error (%s: %s)\n"
+                         % (getattr(_t, "__name__", _t), _v))
+        sys.stderr.flush()
+    except Exception:
+        pass
+    os._exit(2)
+sys.excepthook = _uxd_fail_closed_excepthook
 
 def deny(msg):
     sys.stderr.write("ux-design-cycle: refused — " + msg + "\n")
@@ -159,3 +174,9 @@ if missing:
 
 allow()
 PY
+# Shell layer: map anything that is not allow(0) or deny(2) to a deny(2).
+if [ "$rc" -ne 0 ] && [ "$rc" -ne 2 ]; then
+  echo "ux-design-cycle: refused — fail-closed: internal error (record-fields-gate judge exited $rc)." >&2
+  exit 2
+fi
+exit "$rc"

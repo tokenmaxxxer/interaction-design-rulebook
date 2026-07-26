@@ -395,6 +395,23 @@ fi
 
 cleanup_scratch
 
+# --- (z) fail-closed on internal error: null byte in file_path -> exit 2 ---
+# A null byte in the resolved path makes os.path.realpath raise ValueError.
+# Before hardening this exited 1 (uncaught) = NON-BLOCKING/fail-open for a
+# PreToolUse hook. It must now map to exit 2 (DENY). The JSON carries the
+# null as the   escape (six literal chars in the payload text); json.loads
+# turns it into a real null char inside the judge.
+root_z="$work/z"
+setup_root "$root_z" "idle"
+payload_z="$(python3 -c 'import json; print(json.dumps({"tool_name":"Write","tool_input":{"file_path":"ux-design/sta\x00te.md","content":"---\nstage: idle\n---\n"}}))')"
+run_gate "$root_z" "$payload_z"
+code_z=$?
+if [ "$code_z" -eq 2 ]; then
+  pass "(z) null byte in file_path (realpath ValueError) fails closed to exit 2 (DENY)"
+else
+  fail "(z) null byte in file_path did NOT fail closed to exit 2 (got exit $code_z): $GATE_OUT"
+fi
+
 echo
 echo "== $pass_count passed, $fail_count failed =="
 [ "$fail_count" -eq 0 ]

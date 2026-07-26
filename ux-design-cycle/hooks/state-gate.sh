@@ -149,6 +149,20 @@ import posixpath
 import re
 import sys
 
+# Fail-closed python layer: any uncaught exception (e.g. os.path.realpath on a
+# null-byte/undecodable path raising ValueError, which would otherwise exit 1
+# = fail-open) becomes exit 2 (DENY). SystemExit from allow()/deny() bypasses
+# this hook, so every real allow(0)/deny(2) verdict path is preserved exactly.
+def _uxd_fail_closed_excepthook(_t, _v, _tb):
+    try:
+        sys.stderr.write("ux-design-cycle: refused — fail-closed: internal error (%s: %s)\n"
+                         % (getattr(_t, "__name__", _t), _v))
+        sys.stderr.flush()
+    except Exception:
+        pass
+    os._exit(2)
+sys.excepthook = _uxd_fail_closed_excepthook
+
 def deny(msg):
     sys.stderr.write("ux-design-cycle: refused — %s\n" % msg)
     sys.exit(2)
@@ -768,4 +782,10 @@ deny(
 )
 PY
 status=$?
+# Shell layer: map anything that is not allow(0) or deny(2) to a deny(2) so a
+# crashed judge (uncaught non-2 exit) can never fall through as fail-open.
+if [ "$status" -ne 0 ] && [ "$status" -ne 2 ]; then
+  echo "ux-design-cycle: refused — fail-closed: internal error (state-gate judge exited $status)." >&2
+  exit 2
+fi
 exit "$status"

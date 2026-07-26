@@ -99,6 +99,46 @@ run trailer-gate.sh "$grepo" "$grepo" "$(bjson "git commit -m \"$good_msg\"")"
 run record-fields-gate.sh "$root" "$root" 'not json {{{'
 [ $? -ne 0 ] && pass "fail-closed: malformed JSON payload refused" || fail "fail-closed: malformed JSON ALLOWED: $OUT"
 
+# ===== fail-closed on INTERNAL ERROR: each gate must resolve to exit 2 =====
+# Two crash-inducing payloads per gate class:
+#   - null byte in file_path: os.path.realpath raises ValueError, which
+#     before hardening exited 1 (uncaught) = fail-open for a PreToolUse hook.
+#     Must now map to exit 2 (DENY).
+#   - malformed JSON: unparseable payload must deny (exit 2), never pass.
+# The null is carried as the   escape (six literal chars in payload text);
+# json.loads turns it into a real null char inside the judge.
+nulljson_write() { # file_path-with-null-marker -> Write JSON (marker % -> \x00)
+  python3 -c '
+import json,sys
+fp = sys.argv[1].replace("%", "\x00")
+print(json.dumps({"tool_name":"Write","tool_input":{"file_path":fp,"content":"x"}}))
+' "$1"
+}
+
+# doc-bucket-gate: null byte in a docs/ path reaches os.path.realpath -> ValueError
+run doc-bucket-gate.sh "$root" "$root" "$(nulljson_write 'docs/spe%cs/x.md')"
+[ $? -eq 2 ] && pass "fail-closed: doc-bucket null-byte file_path -> exit 2" || fail "fail-closed: doc-bucket null-byte did NOT exit 2 (got $?): $OUT"
+run doc-bucket-gate.sh "$root" "$root" 'not json {{{'
+[ $? -eq 2 ] && pass "fail-closed: doc-bucket malformed JSON -> exit 2" || fail "fail-closed: doc-bucket malformed JSON did NOT exit 2 (got $?): $OUT"
+
+# path-ownership-gate: null byte reaches resolve()'s os.path.realpath -> ValueError
+run path-ownership-gate.sh "$root" "$root" "$(nulljson_write 'docs/reports/records/subj-a%/coding.md')"
+[ $? -eq 2 ] && pass "fail-closed: path-ownership null-byte file_path -> exit 2" || fail "fail-closed: path-ownership null-byte did NOT exit 2 (got $?): $OUT"
+run path-ownership-gate.sh "$root" "$root" 'not json {{{'
+[ $? -eq 2 ] && pass "fail-closed: path-ownership malformed JSON -> exit 2" || fail "fail-closed: path-ownership malformed JSON did NOT exit 2 (got $?): $OUT"
+
+# record-fields-gate: malformed JSON must deny (exit 2)
+run record-fields-gate.sh "$root" "$root" 'not json {{{'
+[ $? -eq 2 ] && pass "fail-closed: record-fields malformed JSON -> exit 2" || fail "fail-closed: record-fields malformed JSON did NOT exit 2 (got $?): $OUT"
+
+# trailer-gate: malformed JSON must deny (exit 2)
+run trailer-gate.sh "$grepo" "$grepo" 'not json {{{'
+[ $? -eq 2 ] && pass "fail-closed: trailer malformed JSON -> exit 2" || fail "fail-closed: trailer malformed JSON did NOT exit 2 (got $?): $OUT"
+
+# handbook-trigger-gate: malformed JSON must deny (exit 2)
+run handbook-trigger-gate.sh "$grepo" "$grepo" 'not json {{{'
+[ $? -eq 2 ] && pass "fail-closed: handbook-trigger malformed JSON -> exit 2" || fail "fail-closed: handbook-trigger malformed JSON did NOT exit 2 (got $?): $OUT"
+
 echo
 echo "== $pass_count passed, $fail_count failed =="
 [ "$fail_count" -eq 0 ]

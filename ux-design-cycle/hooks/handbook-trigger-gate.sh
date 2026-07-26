@@ -57,7 +57,11 @@ sys.stdout.write(c)
     echo "ux-design-cycle: refused — handbook-trigger-gate.sh could not parse the tool payload (malformed JSON or missing command); denying rather than guessing." >&2
     exit 2
   fi
-  exit 0
+  # Any other nonzero exit is an unexpected crash of the extractor (e.g. an
+  # interpreter error on a hostile payload). Fail closed rather than the old
+  # silent `exit 0` pass-through.
+  echo "ux-design-cycle: refused — fail-closed: internal error (handbook-trigger command extractor exited $rc)." >&2
+  exit 2
 }
 
 # Not a Bash tool call (empty cmd) or not a git commit -> not our business.
@@ -70,8 +74,21 @@ changed="$(git diff --cached --name-only 2>/dev/null)" || {
   exit 2
 }
 
-UXD_CHANGED="$changed" python3 <<'PY'
+rc=0
+UXD_CHANGED="$changed" python3 <<'PY' || rc=$?
 import os, posixpath, re, sys
+
+# Fail-closed python layer: any uncaught exception becomes exit 2 (DENY).
+# SystemExit from deny()/sys.exit(0) bypasses this hook, preserving verdicts.
+def _uxd_fail_closed_excepthook(_t, _v, _tb):
+    try:
+        sys.stderr.write("ux-design-cycle: refused — fail-closed: internal error (%s: %s)\n"
+                         % (getattr(_t, "__name__", _t), _v))
+        sys.stderr.flush()
+    except Exception:
+        pass
+    os._exit(2)
+sys.excepthook = _uxd_fail_closed_excepthook
 
 def deny(msg):
     sys.stderr.write("ux-design-cycle: refused — " + msg + "\n")
@@ -127,3 +144,9 @@ deny(
     "the commands to install/run/operate it)." % (f0, k0)
 )
 PY
+# Shell layer: map anything that is not allow(0) or deny(2) to a deny(2).
+if [ "$rc" -ne 0 ] && [ "$rc" -ne 2 ]; then
+  echo "ux-design-cycle: refused — fail-closed: internal error (handbook-trigger judge exited $rc)." >&2
+  exit 2
+fi
+exit "$rc"
