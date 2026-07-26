@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
+# fail-closed trap-at-top: any abort before verdict logic (failed source,
+# set -e abort, unbound var) forces exit 2 (DENY). Must stay the FIRST
+# executable statement, above set/source, and not be overwritten by a later
+# EXIT trap. Composes with the python try/except and shell exit-code remap.
+__fc(){ rc=$?; if [ "$rc" != 0 ] && [ "$rc" != 2 ]; then echo "fail-closed: gate aborted (rc=$rc)" >&2; exit 2; fi; }
+trap __fc EXIT
 # PreToolUse hook (Write|Edit|MultiEdit|NotebookEdit): enforces contract §11's
 # static per-role path ownership for the ux-design role. Generalizes the
 # scope-gate write-set shape to §11's permanent owned-path table instead of a

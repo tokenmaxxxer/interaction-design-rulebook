@@ -412,6 +412,43 @@ else
   fail "(z) null byte in file_path did NOT fail closed to exit 2 (got exit $code_z): $GATE_OUT"
 fi
 
+# --- (t) trap-at-top fail-closed on a PRE-LOGIC abort -> exit 2 (DENY) -----
+# The trap-at-top contract: any abort BEFORE the gate's verdict logic runs
+# (a failed source, a set -euo abort, an unbound var) must not leak out as a
+# non-2 exit (which a PreToolUse hook treats as NON-BLOCKING/fail-open) — the
+# EXIT trap installed as the first executable statement must re-map it to 2.
+# We reproduce the "unbound var" abort class from the contract: copy the real
+# gate, inject a reference to an unset var immediately after `set -uo pipefail`
+# (before any verdict logic), and confirm it exits 2, not 1.
+root_t="$work/t"
+setup_root "$root_t" "idle"
+gate_t="$work/state-gate-prelogic-abort.sh"
+python3 - "$gate" "$gate_t" <<'PY'
+import sys
+src, dst = sys.argv[1], sys.argv[2]
+lines = open(src).read().split('\n')
+out = []
+injected = False
+for ln in lines:
+    out.append(ln)
+    if not injected and ln.strip() == 'set -uo pipefail':
+        # a bare unset-var reference: aborts here under set -u, rc=1,
+        # BEFORE any verdict logic — exactly the pre-logic abort class.
+        out.append(': "${__DELIBERATE_PRELOGIC_ABORT_UNSET_VAR}"')
+        injected = True
+assert injected, "could not find 'set -uo pipefail' anchor to inject pre-logic abort"
+open(dst, 'w').write('\n'.join(out))
+PY
+chmod +x "$gate_t"
+payload_t="$(json_write "$root_t" "idle")"
+GATE_OUT="$(printf '%s' "$payload_t" | CLAUDE_PROJECT_DIR="$root_t" "$gate_t" 2>&1)"
+code_t=$?
+if [ "$code_t" -eq 2 ]; then
+  pass "(t) pre-logic abort (unbound var before verdict logic) is re-mapped by the trap-at-top to exit 2 (DENY)"
+else
+  fail "(t) pre-logic abort did NOT fail closed to exit 2 (got exit $code_t): $GATE_OUT"
+fi
+
 echo
 echo "== $pass_count passed, $fail_count failed =="
 [ "$fail_count" -eq 0 ]
