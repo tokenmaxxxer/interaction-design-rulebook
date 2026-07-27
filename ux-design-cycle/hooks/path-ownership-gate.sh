@@ -91,23 +91,37 @@ if not (resolved == root or resolved.startswith(root + "/")):
 
 rel = resolved[len(root):].lstrip("/")
 
-RECORDS_RE = re.compile(r'^docs/reports/records/([^/]+)/([^/]+\.md)$')
+# Everything under a subject, not only the .md files directly beneath it.
+# Measured 2026-07-27: this pattern was `([^/]+\.md)$`, so
+# records/<subject>/tokens/<kind>.token matched nothing and was allowed —
+# ux-design could Write its own human-approval token and satisfy contract
+# §19's scope gate by itself.
+RECORDS_RE = re.compile(r'^docs/reports/records/([^/]+)/(.+)$')
 OWN_ROLE_FILE = "ux-design.md"
+OWN_DIR = "ux-design/"
 
 m = RECORDS_RE.match(rel)
 if not m:
     allow()
 
-subject, role_file = m.group(1), m.group(2)
-if role_file != OWN_ROLE_FILE:
-    owner = role_file[:-3] if role_file.endswith(".md") else role_file
+subject, tail = m.group(1), m.group(2)
+if tail == OWN_ROLE_FILE or tail.startswith(OWN_DIR):
+    allow()
+
+if tail.split("/")[0] == "tokens" or tail.endswith(".token"):
     deny(
-        "'%s' is owned by role '%s' per contract §11, not 'ux-design' (ux-design owns only "
-        "docs/reports/records/<subject>/%s). Report the conflict; do not overwrite or merge "
-        "into another role's record." % (rel, owner, OWN_ROLE_FILE)
+        "'%s' is a human-approval token. Tokens are minted from the human's own "
+        "turn or by the unattended judge and consumed by gates — a token written "
+        "by a tool is a forged approval (contract §19)." % rel
     )
 
-allow()
+owner = tail[:-3] if tail.endswith(".md") and "/" not in tail else tail.split("/")[0]
+deny(
+    "'%s' is owned by role '%s' per contract §11, not 'ux-design' (ux-design owns "
+    "only docs/reports/records/<subject>/%s and %s**). Report the conflict; do not "
+    "overwrite or merge into another role's record."
+    % (rel, owner, OWN_ROLE_FILE, OWN_DIR)
+)
 PY
 # Shell layer: map anything that is not allow(0) or deny(2) to a deny(2).
 if [ "$rc" -ne 0 ] && [ "$rc" -ne 2 ]; then
