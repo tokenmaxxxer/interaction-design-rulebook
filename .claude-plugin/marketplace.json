@@ -5,14 +5,9 @@
   },
   "plugins": [
     {
-      "name": "ux-design-cycle",
-      "source": "./ux-design-cycle",
-      "description": "UX-design record state machine: idle -> drafting -> reviewed. Wakes after a new/changed product-record (or a chain-root hypothesis); the ux-design-record must carry a non-empty pointer to its governing hypothesis/product-record; reaching `loop_state: reviewed` is what wakes coding per contract \u00a73."
-    },
-    {
-      "name": "ux-design-agent-env",
-      "source": "./ux-design-agent-env",
-      "description": "One-install environment bundle: installs ux-design-cycle via dependency."
+      "name": "ux-design",
+      "source": "./ux-design",
+      "description": "The ux-design role on contract v3: turns the accepted problem (governing hypothesis/product-record) into screen/flow/wireframe specs concrete enough to build from. Directive carries the four facets \u2014 same-job exemplar research, governing-record survey, spec proposal, and a quality bar (complete states, heuristic + accessibility floors, every element traced to a recorded need). Spec only, never implementation; loop_state reviewed wakes coding."
     }
   ]
 }

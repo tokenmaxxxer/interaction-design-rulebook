@@ -7,7 +7,7 @@ __fc(){ rc=$?; if [ "$rc" != 0 ] && [ "$rc" != 2 ]; then echo "fail-closed: gate
 trap __fc EXIT
 # PreToolUse hook (Write|Edit|MultiEdit|NotebookEdit): enforces contract §20's
 # per-role record minimum content for ux-design's OWN record file
-# (docs/reports/records/<subject>/ux-design.md).
+# (docs/issue-<n>/reports/ux-design.md).
 #
 # Peer to state-gate.sh: state-gate validates the `stage`/`loop_state`
 # transition; this gate validates that the proposed record content carries
@@ -84,7 +84,7 @@ def resolve(path):
     a = n if posixpath.isabs(n) else posixpath.join(root, n)
     return posixpath.normpath(a)
 
-OWN_RE = re.compile(r'^docs/reports/records/([^/]+)/ux-design\.md$')
+OWN_RE = re.compile(r'^docs/issue-[0-9]+/reports/ux-design\.md$')
 
 def target_path():
     if tool in ("Write", "Edit", "MultiEdit", "NotebookEdit"):

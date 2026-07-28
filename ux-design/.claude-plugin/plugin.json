@@ -1,0 +1,7 @@
+{
+  "name": "ux-design",
+  "description": "The ux-design role on contract v3: turns the accepted problem (governing hypothesis/product-record) into screen/flow/wireframe specs concrete enough to build from. Directive carries the four facets \u2014 same-job exemplar research, governing-record survey, spec proposal, and a quality bar (complete states, heuristic + accessibility floors, every element traced to a recorded need). Spec only, never implementation; loop_state reviewed wakes coding.",
+  "author": {
+    "name": "Jung Jiwon & Lee Jongkwan"
+  }
+}
