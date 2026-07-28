@@ -1,8 +1,0 @@
-{
-  "name": "ux-design-cycle",
-  "version": "0.1.0",
-  "description": "UX-design record state machine: idle -> drafting -> reviewed. Wakes after a new/changed product-record (or a chain-root hypothesis); the ux-design-record must carry a non-empty pointer to its governing hypothesis/product-record; reaching `loop_state: reviewed` is what wakes coding per contract \u00a73.",
-  "author": {
-    "name": "Jung Jiwon & Lee Jongkwan"
-  }
-}
