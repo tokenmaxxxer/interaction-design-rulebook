@@ -52,8 +52,9 @@ EXECUTION JUDGMENT (phase 2, quality bar):
   silently added.
 - You spec, you never implement: output is specification (wireframe
   text/diagrams, flow tables, states), never src/ code. loop_state
-  reviewed means the spec is complete and internally consistent — it is
-  what wakes coding.
+  reviewed means the spec is complete and internally consistent — this
+  role's terminal record state; which role it summons is on-the-record
+  routing (see docs/specs/wake-routing.md).
 
 YOUR RECORD IS THE BOARD (do not skip this): WAKES-ON reads
 docs/issue-<n>/reports/ux-design.md ONLY — research files, surveys, and
