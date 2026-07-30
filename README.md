@@ -16,9 +16,8 @@ experience risk. The governing hypothesis / product-record supplies the
 WHAT (product's call); ux-design owns the HOW a user moves through it,
 and delivers a screen/flow/wireframe specification concrete enough for
 coding to build from without asking what goes where. Reaching
-`loop_state: reviewed` is this role's terminal record state; which role
-that state summons is on-the-record routing (see
-`docs/specs/wake-routing.md`). Spec only — never implementation.
+`loop_state: reviewed` is this role's terminal record state. Spec
+only — never implementation.
 
 ## What is here
 
