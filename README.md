@@ -28,9 +28,13 @@ only — never implementation.
                                         survey (governing record + touched
                                         screens + frozen constraints),
                                         proposal (screens/flows traced to the
-                                        governing record), judgment (complete
-                                        states, heuristic + accessibility
-                                        floors, no untraced elements)
+                                        governing record; on a token-less
+                                        project, first establishes
+                                        docs/specs/design-system.md as a
+                                        proposal-gated contract), judgment
+                                        (complete states, heuristic +
+                                        accessibility floors, name-only token
+                                        references, no untraced elements)
     ux-design/hooks/record-fields-gate.sh  s20 minimum content on the record
     ux-design/hooks/trailer-gate.sh     commits staging docs/issue-<n>/** carry
                                         `Subject: issue-<n>`
