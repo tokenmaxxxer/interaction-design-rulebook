@@ -1,0 +1,5 @@
+{
+  "name": "id-state-completeness",
+  "description": "Design-gate check: every screen/flow in the interaction-design record names its complete state set (default, empty, error, loading), phase 2 record surface only. Mechanical pattern check, no agent, per proposal §7.",
+  "author": { "name": "Jung Jiwon & Lee Jongkwan" }
+}

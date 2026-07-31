@@ -1,0 +1,5 @@
+{
+  "name": "id-wireframe-staging",
+  "description": "Row 6 gate: lo-fi-before-hi-fi wireframe fidelity staging (phase 2, interaction-design). Denies a phase-2 record whose wireframe/fidelity section is missing the low-fi stage, missing the high-fi stage, orders high-fi before low-fi, or is a stub heading with no body.",
+  "author": { "name": "Jung Jiwon & Lee Jongkwan" }
+}

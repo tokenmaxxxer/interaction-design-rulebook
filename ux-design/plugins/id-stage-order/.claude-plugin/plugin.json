@@ -1,0 +1,5 @@
+{
+  "name": "id-stage-order",
+  "description": "Cross-cutting survey -> scout -> proposal -> [human approval, enforced by core's approval-gate.sh] -> phase-2 record ordering check for the interaction-design methodology, both phases. Fires on any docs/issue-<n>/proposals/*.md create (requires survey+scout, or a recorded scout-skip) and any docs/issue-<n>/reports/interaction-design.md write (requires a proposal on disk). Owns docs/issue-<n>/reports/interaction-design/.status.json, the shared on-disk contract the other ten interaction-design plugins each add their own key to. Never checks GitHub/human approval itself — that is core's approval-gate.sh's job.",
+  "author": { "name": "Jung Jiwon & Lee Jongkwan" }
+}

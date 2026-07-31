@@ -1,0 +1,5 @@
+{
+  "name": "id-proposal-shape",
+  "description": "Six-section phase-1 proposal shape check (interaction-design methodology, phase 1 only): problem/goal, comparison set, methodology cited, delivery scope, adopt/skip, judged-by. use_when: any write to docs/issue-<n>/proposals/*.md. Composes with id-citation-format and id-stage-order to form the phase-1 proposal norm (docs/issue-21 proposal, section 4).",
+  "author": { "name": "Jung Jiwon & Lee Jongkwan" }
+}

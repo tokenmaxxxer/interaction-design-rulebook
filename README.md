@@ -37,6 +37,19 @@ conformant to WCAG 2.1 AA, a usability-test plan (not a conducted test),
 traceability/scope-growth flagging, and the spec-only output boundary.
 (`docs/issue-15/proposals/interaction-design.md`, approved.)
 
+As of issue-21, these norms are machine-enforced, not prose-only: eleven
+self-contained, independently kill-switchable plugins under
+`ux-design/plugins/<name>/`, each owning exactly one methodology and
+registered as its own `.claude-plugin/marketplace.json` entry —
+`id-proposal-shape` and `id-citation-format` (phase 1), `id-persona-goal`,
+`id-task-flow`, `id-state-completeness`, `id-wireframe-staging`,
+`id-nielsen-heuristics`, `id-accessibility-floor`,
+`id-usability-test-plan`, `id-traceability` (phase 2), and
+`id-stage-order` (cross-cutting survey→scout→proposal→record ordering).
+See `docs/issue-21/proposals/issue-21-interaction-design-gate-machine.md`
+for the full plugin-composition design, and each plugin's own `README.md`
+for what it owns and how its gate is judged.
+
 ## What is here
 
     ux-design/hooks/directive.sh        SessionStart — the four facets:
@@ -102,6 +115,14 @@ has no `env` field, so this rulebook cannot set it from its own
 ## Run the checks
 
     /bin/bash tests/parse-check.sh
+    /bin/bash tests/parse-check.sh ux-design/plugins
     /bin/bash tests/run-gate-tests.sh
     /bin/bash tests/deny-only-check.sh
+    /bin/bash tests/deny-only-check.sh ux-design/plugins
     /bin/bash tests/stub-check.sh ux-design/hooks
+    /bin/bash tests/stub-check.sh ux-design/plugins
+
+Each `ux-design/plugins/<name>/tests/<name>-gate-tests.sh` runs
+independently and is not aggregated into one suite — a broken plugin's
+tests fail attributably, not as one opaque failure (per the approved
+`docs/issue-21/proposals/issue-21-interaction-design-gate-machine.md` §6).

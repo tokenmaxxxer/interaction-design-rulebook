@@ -1,0 +1,5 @@
+{
+  "name": "id-nielsen-heuristics",
+  "description": "Full ten-item Nielsen usability-heuristic pass, each item carrying a non-blank verdict (interaction-design methodology, phase 2 judgment). use_when: after phase-1 proposal approval, on writes to docs/issue-<n>/reports/interaction-design.md. Part of the id-proposal-shape -> id-citation-format -> id-persona-goal -> id-task-flow -> ... -> id-nielsen-heuristics -> id-accessibility-floor -> id-usability-test-plan -> id-traceability phase-2 judgment norm chain (proposal doc §4).",
+  "author": { "name": "Jung Jiwon & Lee Jongkwan" }
+}

@@ -7,7 +7,62 @@
     {
       "name": "ux-design",
       "source": "./ux-design",
-      "description": "The ux-design role on contract v3: turns the accepted problem (governing hypothesis/product-record) into screen/flow/wireframe specs concrete enough to build from. Directive carries the four facets \u2014 same-job exemplar research, governing-record survey, spec proposal, and a quality bar (complete states, heuristic + accessibility floors, every element traced to a recorded need). Spec only, never implementation; loop_state reviewed is this role's terminal record state."
+      "description": "The ux-design role on contract v3: turns the accepted problem (governing hypothesis/product-record) into screen/flow/wireframe specs concrete enough to build from. Directive carries the four facets \u2014 same-job exemplar research, governing-record survey, spec proposal, and a quality bar (complete states, heuristic + accessibility floors, every element traced to a recorded need). Spec only, never implementation; loop_state reviewed is this role's terminal record state. PRODUCES points to the eleven id-* methodology plugins below \u2014 see each plugin's own directive for phase-specific steps/criteria/prohibitions."
+    },
+    {
+      "name": "id-proposal-shape",
+      "source": "./ux-design/plugins/id-proposal-shape",
+      "description": "Six-section phase-1 proposal shape (problem/goal, comparison set, methodology cited, delivery scope, adopt/skip, judged-by), each its own heading with real content. Phase 1. Part of the phase-1 proposal norm: id-proposal-shape \u2227 id-citation-format \u2227 id-stage-order (issue-21 gate-machine proposal \u00a74)."
+    },
+    {
+      "name": "id-citation-format",
+      "source": "./ux-design/plugins/id-citation-format",
+      "description": "Evidence citation format for phase-1 proposals: every factual claim about an exemplar or external convention is sourced or labeled an established-practice assumption. Phase 1. Part of the phase-1 proposal norm alongside id-proposal-shape and id-stage-order (issue-21 \u00a74)."
+    },
+    {
+      "name": "id-persona-goal",
+      "source": "./ux-design/plugins/id-persona-goal",
+      "description": "Cooper goal-directed-design persona/goal reference in the phase-2 record \u2014 a named persona with a distinct goal field, not a role label. Phase 2. Ships a checklist (agents/persona-goal-checklist.md) for judging genuineness. Part of the phase-2 judgment norm (issue-21 \u00a74)."
+    },
+    {
+      "name": "id-task-flow",
+      "source": "./ux-design/plugins/id-task-flow",
+      "description": "Distinct task/interaction-flow artifact in the phase-2 record, separate from any wireframe-headed section. Phase 2. Part of the phase-2 judgment norm (issue-21 \u00a74)."
+    },
+    {
+      "name": "id-state-completeness",
+      "source": "./ux-design/plugins/id-state-completeness",
+      "description": "Complete state set (default/empty/error/loading) named per screen/flow in the phase-2 record. Phase 2. Part of the phase-2 judgment norm (issue-21 \u00a74)."
+    },
+    {
+      "name": "id-wireframe-staging",
+      "source": "./ux-design/plugins/id-wireframe-staging",
+      "description": "Low-fidelity-before-high-fidelity wireframe staging in the phase-2 record \u2014 two distinct staged sub-headings, lo-fi ordered before hi-fi. Phase 2. Part of the phase-2 judgment norm (issue-21 \u00a74)."
+    },
+    {
+      "name": "id-nielsen-heuristics",
+      "source": "./ux-design/plugins/id-nielsen-heuristics",
+      "description": "Full ten-item Nielsen usability-heuristics pass in the phase-2 record, each item carrying an explicit verdict. Phase 2. Ships a checklist (agents/nielsen-checklist.md) for judging genuineness vs rubber-stamping. Part of the phase-2 judgment norm (issue-21 \u00a74)."
+    },
+    {
+      "name": "id-accessibility-floor",
+      "source": "./ux-design/plugins/id-accessibility-floor",
+      "description": "WCAG 2.1 AA accessibility floor named explicitly in the phase-2 record, with concrete keyboard/focus/label/contrast coverage. Phase 2. Part of the phase-2 judgment norm (issue-21 \u00a74)."
+    },
+    {
+      "name": "id-usability-test-plan",
+      "source": "./ux-design/plugins/id-usability-test-plan",
+      "description": "Usability-test plan (task scenario + participant/recruitment count) in the phase-2 record \u2014 planned, never conducted or reported by this role. Phase 2. Part of the phase-2 judgment norm (issue-21 \u00a74)."
+    },
+    {
+      "name": "id-traceability",
+      "source": "./ux-design/plugins/id-traceability",
+      "description": "Traceability/scope-growth flagging and the spec-only output boundary, named explicitly in the phase-2 record. Phase 2. Part of the phase-2 judgment norm (issue-21 \u00a74)."
+    },
+    {
+      "name": "id-stage-order",
+      "source": "./ux-design/plugins/id-stage-order",
+      "description": "Cross-cutting survey \u2192 scout \u2192 proposal \u2192 record ordering, enforced purely by on-disk artifact presence (never GitHub/network \u2014 core's approval-gate.sh already owns the human-Approve precondition). Owns the shared docs/issue-<n>/reports/interaction-design/.status.json contract every other id-* plugin writes its own key into. Composes into both the phase-1 and phase-2 norms (issue-21 \u00a74)."
     }
   ]
 }

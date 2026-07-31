@@ -1,0 +1,5 @@
+{
+  "name": "id-traceability",
+  "description": "Traceability/scope-growth flagging + spec-only output boundary gate (interaction-design methodology, phase 2). use_when: writing the phase-2 record docs/issue-<n>/reports/interaction-design.md. Row 10 of the interaction-design gate machine; part of the id-* plugin set alongside id-stage-order.",
+  "author": { "name": "Jung Jiwon & Lee Jongkwan" }
+}

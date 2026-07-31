@@ -1,0 +1,5 @@
+{
+  "name": "id-usability-test-plan",
+  "description": "Usability-test plan gate (interaction-design methodology, phase 2 record). Requires the phase-2 interaction-design record to name at least one task scenario plus a participant-count/recruitment line before it is judged complete. Planned, not conducted: this plugin only enforces that a usability test is planned — actually running or reporting a real usability test is phase 3+ and out of scope. use_when: judging the phase-2 docs/issue-<n>/reports/interaction-design.md record, alongside the other id-* phase-2 plugins per the interaction-design gate-machine proposal.",
+  "author": { "name": "Jung Jiwon & Lee Jongkwan" }
+}
