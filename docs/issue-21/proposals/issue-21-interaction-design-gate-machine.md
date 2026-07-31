@@ -129,6 +129,54 @@ the design, per the approver's correction.
   convention for `directive.sh` itself. Each gate denies with a message
   naming exactly which of its own required elements is missing —
   distinct plugins never produce a shared, undifferentiated error.
+
+  **Per-plugin matching patterns (all eleven gates):**
+
+  `id-proposal-shape` requires six distinct headings, one per row-1
+  section, each matched by its own regex so no two can hit the same
+  heading:
+
+  | Required section | Heading-anchored regex |
+  |---|---|
+  | Problem/goal | `/^#+\s*.*\b(problem\s*framing\|problem\|goal)\b/i` |
+  | Comparison set | `/^#+\s*.*\b(comparison\|alternatives?\|catalog\|compared\s+options?)\b/i` |
+  | Methodology cited | `/^#+\s*.*\b(methodolog(y\|ies)\|adopted\s+methodolog)\b/i` |
+  | Delivery scope | `/^#+\s*.*\b(delivery\s+scope\|does\s+not\s+do\|out\s+of\s+scope)\b/i` |
+  | Adopt/skip | `/^#+\s*.*\b(adopt\s*\/\s*skip\|adopt\|skip)\b/i` |
+  | Judged-by | `/^#+\s*.*\b(judged[\s-]by\|judgment\|approv(al\|ed)\|gate\s+tests?)\b/i` |
+
+  (This document's own §1/§2/§5/§8 headings satisfy problem/goal,
+  methodology-cited, and delivery-scope respectively; comparison-set,
+  adopt/skip, and judged-by are the three the plugin would currently
+  flag as absent in this revision — a live example of the gate finding
+  a real gap, not a hypothetical.)
+
+  `id-citation-format` requires, per claim/bullet, either a source
+  marker or an explicit assumption label — matching this repo's own
+  `scout-brief.md` convention (its `## Sources` closing section, e.g.
+  lines 88-98, plus inline flags like "issue-text-attributed, not
+  independently verified"): regex
+  `/\b(sources?:|https?:\/\/|attributed to|established-practice
+  assumption|assumption|가정)\b/i`, checked against (a) a required
+  closing heading matching `/^#+\s*sources?\b/i` listing at least one
+  file/path or URL, and (b) any bullet making a factual claim about a
+  sibling repo or external convention. A bullet with neither a
+  `Sources:`/URL marker nor an `assumption`/`가정` label denies.
+
+  The remaining eight gates, each a heading-anchored regex plus a
+  minimum content check, per the methodology each owns in §2/§3:
+
+  | Plugin | Heading regex | Minimum content check |
+  |---|---|---|
+  | `id-persona-goal` | `/^#+\s*.*\b(persona\|user\s+goal)\b/i` | at least one named persona block with a distinct "goal" field, not just a role label |
+  | `id-task-flow` | `/^#+\s*.*\b(task\s+flow\|interaction\s+flow)\b/i` | flow artifact lives in a section/file distinct from any `wireframe`-headed section (same-heading match fails) |
+  | `id-state-completeness` | `/^#+\s*.*\b(states?\|state\s+coverage)\b/i` | per screen/flow heading, a sub-list with at least the `default/empty/error/loading` state set named explicitly |
+  | `id-wireframe-staging` | `/^#+\s*.*\b(wireframe\|fidelity)\b/i` | two distinct staged sub-headings matching `/lo(w)?[\s-]?fi/i` and `/hi(gh)?[\s-]?fi/i`, low-fi heading ordered before high-fi heading |
+  | `id-accessibility-floor` | `/^#+\s*.*\b(wcag\|accessibility)\b/i` | body contains an explicit level mention matching `/\b2\.1\s*AA\b/i` (or equivalent named level), not just the word "accessible" |
+  | `id-usability-test-plan` | `/^#+\s*.*\b(usability\s+test\|test\s+plan)\b/i` | at least one named task scenario plus a participant-count or recruitment line; a plan with only a heading and no scenario is a stub |
+  | `id-traceability` | `/^#+\s*.*\b(traceability\|scope\s+growth)\b/i` | explicit spec-only boundary statement matching `/\bspec[\s-]only\b/i` plus at least one scope-growth flag field (even if empty-valued, the field key must be present) |
+  | `id-stage-order` | n/a (reads `.status.json`, not a heading) | required earlier stage's value in `.status.json` equals `done`; heading-check plugins above are irrelevant to this one |
+
 - **`id-stage-order`** is the one cross-cutting plugin: it owns
   `docs/issue-<n>/reports/interaction-design/.status.json` (schema per
   survey/scout/proposal/approved/judgment, one entry per stage) and
