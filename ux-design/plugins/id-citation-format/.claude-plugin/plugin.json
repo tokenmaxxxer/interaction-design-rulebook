@@ -1,0 +1,5 @@
+{
+  "name": "id-citation-format",
+  "description": "Evidence citation format for interaction-design phase-1 proposals — every factual claim about an exemplar product or external convention must carry a source marker or an explicit assumption label, and the proposal must close with a Sources section (phase 1 only). Part of the phase-1 norm id-proposal-shape ∧ id-citation-format ∧ id-stage-order.",
+  "author": { "name": "Jung Jiwon & Lee Jongkwan" }
+}

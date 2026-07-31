@@ -1,0 +1,5 @@
+{
+  "name": "id-accessibility-floor",
+  "description": "WCAG 2.1 AA accessibility floor gate (interaction-design phase 2, row 8: keyboard, focus, label, contrast). use_when: gating docs/issue-<n>/reports/interaction-design.md writes alongside the other phase-2 plugins in the id-* set. Part of the id-nielsen-heuristics ∧ id-accessibility-floor ∧ id-usability-test-plan ∧ id-traceability ∧ id-stage-order phase-2 norm.",
+  "author": { "name": "Jung Jiwon & Lee Jongkwan" }
+}

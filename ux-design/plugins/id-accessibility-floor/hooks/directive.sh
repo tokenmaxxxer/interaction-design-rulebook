@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+. "${CLAUDE_PLUGIN_ROOT_CORE:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../../core" && pwd -P)}/hooks/lib/role-directive.sh"
+YOU_DECIDE=$'YOU DECIDE: whether the phase-2 interaction-design record meets the\nWCAG 2.1 AA accessibility floor — keyboard reachability, visible focus,\ninput labels, and contrast expressed at the token level. You judge the\nfloor\'s presence and rigor; you do not judge the rest of the record\n(heuristics, task flow, usability-test plan, traceability belong to\nsibling id-* plugins).'
+USE_WHEN=$'USE_WHEN: gating any write to docs/issue-<n>/reports/interaction-design.md\n(the phase-2 record) once id-stage-order confirms the proposal stage is\napproved. Fires alongside, never instead of, the other phase-2 id-*\nplugins that together make up the phase-2 norm.'
+PRODUCES=$'PRODUCES: a pass/deny verdict on the record\'s accessibility section —\na heading matching WCAG/accessibility, an explicit named conformance\nlevel (2.1 AA or an equivalent explicitly named level), and concrete\ncoverage of at least two of keyboard, focus, label, contrast. A heading\npresent with a blank or vague body ("accessible" with nothing concrete)\nis a stub and is denied, matching this repo\'s stub-check convention.'
+HAND_OFF=$'HAND-OFF: none — this plugin only gates the accessibility floor; once\nit passes, id-usability-test-plan, id-traceability, and id-stage-order\'s\nown checks still apply before the record is complete.'
+core_role_directive "$YOU_DECIDE" "$USE_WHEN" "$PRODUCES" "$HAND_OFF"

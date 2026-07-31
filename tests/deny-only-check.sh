@@ -42,7 +42,7 @@ fi
 
 # --- substance probe: an empty ux-design record must be refused -----------
 probe_dir="${1:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../ux-design/hooks" && pwd -P)}"
-rec_rel="docs/issue-999/reports/ux-design.md"
+rec_rel="docs/issue-999/reports/interaction-design.md"
 
 substance_probe() {
   gates="$(find "$probe_dir" -name '*-gate.sh' -type f 2>/dev/null || true)"

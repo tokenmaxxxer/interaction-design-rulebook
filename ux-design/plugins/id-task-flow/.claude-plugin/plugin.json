@@ -1,0 +1,5 @@
+{
+  "name": "id-task-flow",
+  "description": "Distinct task/interaction-flow artifact check (interaction-design methodology, phase 2 only): the flow artifact must live in a section distinct from any wireframe-headed section, with real (non-stub) content. use_when: any write to docs/issue-<n>/reports/interaction-design.md. Composes with id-persona-goal, id-state-completeness, id-wireframe-staging, id-nielsen-heuristics, id-accessibility-floor, id-usability-test-plan, id-traceability, and id-stage-order to form the phase-2 judgment norm (docs/issue-21 proposal, section 4).",
+  "author": { "name": "Jung Jiwon & Lee Jongkwan" }
+}

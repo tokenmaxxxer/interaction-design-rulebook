@@ -1,0 +1,5 @@
+{
+  "name": "id-persona-goal",
+  "description": "Cooper goal-directed-design persona/goal model (interaction-design methodology, phase 2 judgment). use_when: after phase-1 proposal approval, on writes to docs/issue-<n>/reports/interaction-design.md. Part of the id-proposal-shape -> id-citation-format -> id-persona-goal -> id-task-flow -> ... phase-2 judgment norm chain (proposal doc §4).",
+  "author": { "name": "Jung Jiwon & Lee Jongkwan" }
+}
