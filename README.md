@@ -3,11 +3,14 @@
 The `ux-design` role on contract v3. A ux-design session is spawned with
 two plugin sets installed: this marketplace's `ux-design` plugin, and the
 [tokenmaxxxer-core](https://github.com/tokenmaxxxer/tokenmaxxxer-core)
-plugins (`core`, `terse`, `freelunch`, `scout`). Core owns the interaction
-protocol — issue in, two-phase PR out (research/survey/proposal → human
-review Approve → execution), branch `issue-<n>/ux-design`, record at
-`docs/issue-<n>/reports/ux-design.md`. This rulebook owns only what is
-ux-design-specific.
+plugins (`core`, `terse`, `freelunch`, `scout`, `warrant`). Core owns the
+interaction protocol — issue in, two-phase PR out
+(research/survey/proposal → human review Approve → execution), branch
+`issue-<n>/ux-design`, record at `docs/issue-<n>/reports/ux-design.md` —
+and the role-agnostic review gates (trailer/record-fields/handbook-trigger),
+fired globally by `core/hooks/hooks.json` for every plugin install. This
+rulebook owns only what is ux-design-specific: `directive.sh`'s four
+role-unique values.
 
 ## What `ux-design` decides
 
@@ -35,11 +38,11 @@ only — never implementation.
                                         (complete states, heuristic +
                                         accessibility floors, name-only token
                                         references, no untraced elements)
-    ux-design/hooks/record-fields-gate.sh  s20 minimum content on the record
-    ux-design/hooks/trailer-gate.sh     commits staging docs/issue-<n>/** carry
-                                        `Subject: issue-<n>`
-    ux-design/hooks/handbook-trigger-gate.sh  s21 same-turn handbook sync
     tests/                              repo-level checks (never installed)
+
+s20 record-field minimums, commit-trailer enforcement (`Subject: issue-<n>`),
+and s21 same-turn handbook sync are core canon gates now (core issue-66) —
+no local copy lives in this rulebook.
 
 This revision also retires the stale product-rulebook prose this README
 used to carry (a copy-paste role description that was factually wrong for
@@ -59,8 +62,17 @@ pointers to them.
 
 Kill switch: `UX_DESIGN_CYCLE_OFF=1`.
 
+This role's record terminal state is `reviewed`, not core's own default
+(`landed`). Core's `record-fields-gate.sh` (now the only copy, fired
+globally) reads that from `RECORD_FIELDS_TERMINAL_STATES` — a hook entry
+has no `env` field, so this rulebook cannot set it from its own
+`hooks.json`. Set it in the project's own `.claude/settings.json`:
+
+    { "env": { "RECORD_FIELDS_TERMINAL_STATES": "reviewed" } }
+
 ## Run the checks
 
     /bin/bash tests/parse-check.sh
     /bin/bash tests/run-gate-tests.sh
     /bin/bash tests/deny-only-check.sh
+    /bin/bash tests/stub-check.sh ux-design/hooks
