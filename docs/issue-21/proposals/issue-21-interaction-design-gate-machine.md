@@ -4,202 +4,211 @@ role: interaction-design
 loop_state: drafting
 ---
 
-# Proposal — interaction-design gate machine (issue-21)
+# Proposal — interaction-design gate machine, as a plugin set (issue-21)
 
 **PHASE 1 ONLY.** This is a design proposal for review, not an
-implementation. It contains no code changes to `src/`, no actual gate
-scripts, and no changes to `ux-design/hooks/directive.sh` or any hook
-file — every mechanism below is described in prose/pseudocode for human
-approval before any phase-2 build work starts. Canon is referenced by
-path, never inline-copied (per core `canon-scripts.md`; see
-`docs/issue-16/proposals/2026-07-31-convert-to-core-canon-references.md`
-for this repo's established citation convention).
+implementation. It contains no code changes to `src/`, no gate scripts,
+no new `.claude-plugin/plugin.json` files, and no changes to
+`ux-design/hooks/directive.sh`, `hooks.json`, or
+`.claude-plugin/marketplace.json` — every plugin, gate, and test named
+below is a phase-2 build item, described here for human approval only.
+Canon scripts are referenced by path, never inline-copied (core
+`canon-scripts.md`).
+
+**Revision note.** This supersedes the prior draft of this file (commit
+`8cb94cf`), which the approver's FEEDBACK on PR #22 marked FAIL: it
+proposed a single `methodology-gate.sh` + one `.status.json` file, not
+the required **plugin set**. This revision keeps the Nielsen-10 /
+Cooper-triangle content bar unchanged and restructures the mechanism
+entirely around independent, self-contained plugins, each owning exactly
+one methodology, registered in `marketplace.json` — the same shape core's
+own `freelunch`/`scout` plugins already take. The gate-matching strategy
+(§4) is decided in this document, not deferred to phase 2.
 
 ## 1. Problem framing (traced to survey + scout brief)
 
 Per `docs/issue-21/reports/interaction-design/survey.md` §4-5 and
 `docs/issue-21/reports/interaction-design/scout-brief.md`'s GAP LINE: the
-interaction-design methodology adopted in issue-15 is fully specified as
-directive prose (`ux-design/hooks/directive.sh`, `PRODUCES`/`HAND_OFF`)
-but has zero mechanical enforcement. This proposal closes that gap
-without re-litigating the methodology's content — the six-section
-proposal / nine-component judgment lists are taken as given, cited by
-path, not restated in full here.
+interaction-design methodology adopted in issue-15 exists only as
+directive prose (`ux-design/hooks/directive.sh` `PRODUCES`/`HAND_OFF`) —
+zero mechanical enforcement, one undifferentiated block per phase. The
+issue's own corrected requirement is explicit: not a single deepened
+directive or one monolithic gate, but a **plugin set** — one independent,
+self-contained plugin per adopted methodology, each installable/
+kill-switchable on its own, composed together to constitute the phase-1
+and phase-2 norms respectively. This proposal's structure below *is* the
+design — not a restatement of six/nine bullet content.
 
-## 2. Directive deepening
+## 2. The adopted methodologies, decomposed to one-plugin-each
 
-The current `directive.sh` already names the six/nine items but as
-free-running prose paragraphs. Deepen it (phase 2 implementation work,
-not this proposal) along these lines:
+Issue-15's approved proposal (`docs/issue-15/proposals/interaction-design.md`,
+folded into `directive.sh` at `2244b72`) bundled several genuinely
+distinct methodologies into two prose blocks. Un-bundling them by the
+single-methodology-per-plugin rule gives:
 
-- **Explicit stage list**, one per named methodology stage, each with
-  its own judgment criterion and prohibition, instead of a single prose
-  block per facet:
-  - Stage `survey`: judgment criterion — "governing hypothesis/product-
-    record identified, existing screens/flows named, methodology/
-    heuristic set named" (already in `USE_WHEN`, per
-    `ux-design/hooks/directive.sh`). Prohibition: no named methodology ->
-    survey is incomplete, not "minimal" (already stated; deepening makes
-    this a checkable predicate, not just prose).
-  - Stage `scout`: judgment criterion — sources cited or explicitly
-    labeled "established-practice assumption" (mirrors this proposal's
-    own scout-brief format). Prohibition: uncited factual claims about
-    an exemplar product.
-  - Stage `proposal`: judgment criterion — all six named sections present
-    with non-trivial content (not just a heading). Prohibition: heading-
-    only sections ("stub sections") count as absent, not present.
-  - Stage `judgment` (phase 2 deliverable): judgment criterion — all nine
-    named components present or explicitly marked inapplicable with a
-    stated reason. Prohibition: silent omission of any of the nine.
-- **Facet-level executability**: each criterion above should be phrased
-  so a script can check for it mechanically (e.g., "contains a heading
-  matching one of {"Problem", "Goal"} case-insensitively, followed by at
-  least N non-whitespace characters before the next heading") — this is
-  the concrete "facet-level executable" requirement issue-21 asks for,
-  as opposed to the current one-line PRODUCES summary.
-- Directive text itself stays canon-owned in the sense that its *content*
-  (what the six/nine items are) is unchanged from issue-15's approved
-  proposal — this phase only proposes making each item indepedently
-  checkable, not changing what is required.
+| # | Methodology | Currently lives in | Phase it gates |
+|---|---|---|---|
+| 1 | Six-section phase-1 proposal shape (problem/goal, comparison set, methodology cited, delivery scope, adopt/skip, judged-by) | `directive.sh` `PRODUCES` | phase 1 |
+| 2 | Evidence citation format (sourced or "established-practice assumption") | `directive.sh` `PRODUCES` | phase 1 |
+| 3 | Goal/persona reference model (Cooper, *About Face*) | `directive.sh` `HAND_OFF` | phase 2 |
+| 4 | Distinct task/interaction-flow artifact (separate from wireframes) | `directive.sh` `HAND_OFF` | phase 2 |
+| 5 | Complete-states-per-screen/flow requirement | `directive.sh` `HAND_OFF` | phase 2 |
+| 6 | Low-fidelity-before-high-fidelity wireframe staging | `directive.sh` `HAND_OFF` | phase 2 |
+| 7 | Nielsen's ten usability heuristics, full pass | `directive.sh` `HAND_OFF` | phase 2 |
+| 8 | Accessibility floor, WCAG 2.1 AA | `directive.sh` `HAND_OFF` | phase 2 |
+| 9 | Usability-test plan (planned, not conducted) | `directive.sh` `HAND_OFF` | phase 2 |
+| 10 | Traceability / scope-growth flagging + spec-only output boundary | `directive.sh` `HAND_OFF` | phase 2 |
+| — | Stage ordering (survey → scout → proposal → approval → judgment) | nowhere (issue-21 ask) | both, cross-cutting |
 
-## 3. Methodology gate(s)
+Content is unchanged from issue-15's approved text — this table only
+names the seams along which it splits into plugins.
 
-### 3.1 Gate shape
+## 3. Plugin catalog (mandatory per the approver's correction)
 
-A PreToolUse hook (new file, e.g.
-`ux-design/hooks/methodology-gate.sh`, phase-2 work — not created in this
-proposal) firing on writes to:
+Ten methodology plugins plus one cross-cutting ordering plugin, each
+self-contained (own `hooks/`, own gate script, own agent/checklist where
+the methodology needs one, own test file) and each registered as its own
+entry in `.claude-plugin/marketplace.json`, next to the existing
+`ux-design` entry — mirroring how `tokenmaxxxer-core` registers
+`freelunch` and `scout` as separate installable plugins rather than one
+"core-extras" bundle.
 
-- `docs/issue-<n>/proposals/*.md` (phase-1 proposal writes)
-- `docs/issue-<n>/reports/interaction-design/*.md` (survey/scout writes)
-- the phase-2 record location (`docs/issue-<n>/reports/ux-design.md`, per
-  `README.md:9`)
+| Plugin name | Owns (single methodology) | Components (phase-2 build items) | Phase |
+|---|---|---|---|
+| `id-proposal-shape` | Row 1: six-section proposal | `hooks/proposal-shape-gate.sh` (PreToolUse), `tests/proposal-shape-gate-tests.sh` | 1 |
+| `id-citation-format` | Row 2: evidence citation format | `hooks/citation-gate.sh` (PreToolUse), `tests/citation-gate-tests.sh` | 1 |
+| `id-persona-goal` | Row 3: Cooper persona/goal model | `hooks/persona-goal-gate.sh`, `agents/persona-goal-checklist.md`, `tests/persona-goal-gate-tests.sh` | 2 |
+| `id-task-flow` | Row 4: distinct task-flow artifact | `hooks/task-flow-gate.sh`, `tests/task-flow-gate-tests.sh` | 2 |
+| `id-state-completeness` | Row 5: complete states per screen/flow | `hooks/state-completeness-gate.sh`, `tests/state-completeness-gate-tests.sh` | 2 |
+| `id-wireframe-staging` | Row 6: lo-fi-before-hi-fi staging | `hooks/wireframe-staging-gate.sh`, `tests/wireframe-staging-gate-tests.sh` | 2 |
+| `id-nielsen-heuristics` | Row 7: Nielsen 10-item heuristic pass | `hooks/nielsen-gate.sh`, `agents/nielsen-checklist.md`, `tests/nielsen-gate-tests.sh` | 2 |
+| `id-accessibility-floor` | Row 8: WCAG 2.1 AA floor | `hooks/accessibility-gate.sh`, `tests/accessibility-gate-tests.sh` | 2 |
+| `id-usability-test-plan` | Row 9: usability-test plan | `hooks/usability-test-gate.sh`, `tests/usability-test-gate-tests.sh` | 2 |
+| `id-traceability` | Row 10: traceability/scope-growth + spec-only boundary | `hooks/traceability-gate.sh`, `tests/traceability-gate-tests.sh` | 2 |
+| `id-stage-order` | Cross-cutting: survey→scout→proposal→approval→judgment ordering | `hooks/stage-order-gate.sh` (PreToolUse, all write surfaces), owns `.status.json` schema + read/write, `tests/stage-order-gate-tests.sh` | both |
 
-Pseudocode (design only — no shell implementation in this proposal):
+Each plugin is a normal marketplace entry (`.claude-plugin/plugin.json` +
+`hooks/hooks.json`), same shape as `ux-design/.claude-plugin/plugin.json`
+today — none of them share a hook file or a gate script with another;
+a false positive in `id-nielsen-heuristics` cannot block a write that
+only `id-task-flow` cares about, and either plugin can be killed
+independently (`ID_NIELSEN_HEURISTICS_OFF=1`, etc., one env var per
+plugin, following the existing `UX_DESIGN_CYCLE_OFF` convention).
 
-```
-on PreToolUse(Write|Edit) where path matches one of the three globs above:
-  content = read the file-to-be-written (proposed content, not disk state)
-  required = required_sections_for(path)   # six-item list for proposals,
-                                            # nine-item list for the phase-2
-                                            # record, per directive.sh
-  missing = []
-  for section in required:
-    if not content.matches(section.heading_pattern) or
-       content.section_body(section) is blank/whitespace-only:
-      missing.append(section.name)
-  if missing:
-    deny the write, message: "methodology gate: missing/empty section(s):
-      {missing}. See ux-design/hooks/directive.sh PRODUCES/HAND_OFF."
-  else:
-    allow
-```
+## 4. Composition: how the plugins add up to each phase's norm
 
-This mirrors the shape the issue cites (`pricing-rulebook`'s
-`methodology-gate.sh`, per survey.md §5) at the level of "check for
-required sections/elements on the write surface" — the exact matching
-strategy (heading regex vs. structured frontmatter vs. section-count
-heuristic) is left as a phase-2 implementation decision, not fixed here,
-since it depends on how strict a false-positive rate is acceptable (see
-§5 below).
+This is the part the prior draft skipped — *which plugins combine to
+make phase 1's norm, and which combine to make phase 2's norm* is itself
+the design, per the approver's correction.
 
-### 3.2 State tracking for ordering
+- **Phase-1 proposal norm** = `id-proposal-shape` ∧ `id-citation-format` ∧
+  `id-stage-order` (checking `survey: done, scout: done` before allowing
+  a proposal write). All three gates fire on the same write surface
+  (`docs/issue-<n>/proposals/*.md`) independently; the write is allowed
+  only if all three currently-installed phase-1 plugins allow it. A repo
+  that only installs `id-proposal-shape` (e.g. `id-citation-format`
+  killed) gets a weaker but still-functioning phase-1 norm — composition
+  is additive, not all-or-nothing.
+- **Phase-2 judgment norm** = `id-persona-goal` ∧ `id-task-flow` ∧
+  `id-state-completeness` ∧ `id-wireframe-staging` ∧
+  `id-nielsen-heuristics` ∧ `id-accessibility-floor` ∧
+  `id-usability-test-plan` ∧ `id-traceability` ∧ `id-stage-order`
+  (checking `approved: done` before allowing the phase-2 record write).
+  All nine fire on `docs/issue-<n>/reports/ux-design.md` (the phase-2
+  record) and on any wireframe/spec artifact path the record points to.
+- **Gate-matching strategy (decided now, not deferred):** every gate
+  reads the *proposed* content (the write about to happen, not disk
+  state) and matches a heading-anchored regex per required element,
+  e.g. `id-nielsen-heuristics` requires a heading matching
+  `/^#+\s*(nielsen|heuristic evaluation)/i` followed by ten distinct
+  numbered sub-items before the next same-level heading, each with a
+  non-blank verdict. This mirrors `id-proposal-shape`'s six-heading check
+  and `id-citation-format`'s per-claim source-or-assumption-label check.
+  Heading-only "stub" sections (heading present, body blank/whitespace)
+  count as **absent**, matching this repo's `tests/stub-check.sh`
+  convention for `directive.sh` itself. Each gate denies with a message
+  naming exactly which of its own required elements is missing —
+  distinct plugins never produce a shared, undifferentiated error.
+- **`id-stage-order`** is the one cross-cutting plugin: it owns
+  `docs/issue-<n>/reports/interaction-design/.status.json` (schema per
+  survey/scout/proposal/approved/judgment, one entry per stage) and
+  exposes nothing to the other nine plugins beyond that one file on
+  disk — every other gate's stage-order check is "read `.status.json`,
+  confirm the required earlier stage is `done`," a few self-contained
+  lines duplicated per plugin rather than a shared library import,
+  keeping each plugin genuinely self-contained (no plugin-to-plugin
+  code dependency, only a shared on-disk contract, same relationship
+  core's `record-fields-gate.sh` has to every role plugin that reads
+  `RECORD_FIELDS_TERMINAL_STATES`).
 
-Interaction-design's adopted method has an ordering constraint: survey ->
-scout -> proposal -> (human approval) -> phase-2 judgment. Per
-`ux-design/hooks/directive.sh` this is already implied by
-`loop_state: idle, drafting, reviewed` in the record vocabulary
-(`README.md:76-85`), but nothing enforces the *transition order* today.
+## 5. Marketplace registration
 
-Proposed mechanism: a small per-issue status artifact, e.g.
-`docs/issue-<n>/reports/interaction-design/.status.json`:
+`.claude-plugin/marketplace.json` (phase-2 edit) gains eleven new
+entries alongside the existing `ux-design` entry — one per row in §3's
+table, each with `name`, `source`, and a one-line `description` naming
+the single methodology it owns (mirroring the existing `ux-design` entry
+and how `tokenmaxxxer-core`'s marketplace lists `freelunch`/`scout` as
+peers, not children, of `core`). No plugin's `description` may reference
+another plugin's gate logic — only the shared `.status.json` contract
+(§4) and, where relevant, `README.md`'s human-readable digest.
 
-```json
-{
-  "issue": 21,
-  "stages": {
-    "survey": "done",
-    "scout": "done",
-    "proposal": "done",
-    "approved": "pending",
-    "judgment": "not_started"
-  }
-}
-```
+## 6. Gate tests
 
-The methodology gate above would additionally check, before allowing a
-write to a later-stage artifact, that the status file marks all earlier
-stages `done` (or `approved` for the phase-1 -> phase-2 boundary, gated
-on human Approve per core's interaction protocol, `README.md:6-8`) — i.e.
-a phase-2 judgment write is rejected if `.status.json` shows `approved:
-pending`. The status file itself would be updated by the same gate hook
-on a successful write (not hand-maintained), so it can't drift from
-reality by omission.
+One test file per plugin (`tests/<plugin>-gate-tests.sh`, following this
+repo's existing one-property-per-script convention —
+`tests/parse-check.sh`, `tests/deny-only-check.sh`,
+`tests/stub-check.sh`), each with at minimum:
 
-This state file is scoped to interaction-design only (written under this
-role's own report directory) and does not touch core's own record/
-`loop_state` mechanism — it is an additional, role-owned tracking layer,
-not a replacement for the core record fields.
+- **True positive (reject):** the plugin's one required element missing
+  → gate denies, message names that element.
+- **True negative (allow):** the required element present and non-blank
+  → gate allows.
+- **Stub guard:** heading present, body blank/whitespace → gate denies
+  (same failure mode `tests/stub-check.sh` already catches for
+  `directive.sh`).
+- **Independence guard:** a write that fails a *different* plugin's
+  check but satisfies this plugin's own check → this plugin's gate
+  allows (proves gates don't cross-contaminate; the write is still
+  blocked overall by the other plugin, tested in that plugin's own
+  suite).
 
-## 4. Gate tests
+`id-stage-order` additionally needs:
 
-Following this repo's existing one-property-per-script convention
-(`tests/parse-check.sh`, `tests/deny-only-check.sh`,
-`tests/stub-check.sh`), phase-2 work would add
-`tests/methodology-gate-tests.sh` (or fold into `run-gate-tests.sh`,
-un-stubbing it) with, at minimum:
+- **Ordering-violation:** write to a later-stage artifact while
+  `.status.json` shows the required earlier stage not `done` → deny.
+- **Ordering-satisfied:** same write once the earlier stage is `done` →
+  allow (assuming the calling plugin's own content check also passes).
+- **Self-update:** a successful write advances `.status.json`'s own
+  stage to `done`, so the file can't drift from reality by hand-editing
+  omission.
 
-- **True positive (reject) case**: a proposal file missing one of the six
-  named sections (e.g., no "Adopt/skip rationale" heading) -> gate must
-  deny.
-- **True negative (allow) case**: a proposal file with all six sections
-  present and non-blank -> gate must allow.
-- **False-negative guard**: a proposal file with all six *headings*
-  present but one section body blank/whitespace-only -> gate must still
-  deny (catches the "heading-only stub" failure mode named in §2).
-- **False-positive guard**: a proposal file whose prose legitimately uses
-  section-like language mid-paragraph (e.g., mentions "how it will be
-  judged" inside another section's body, not as its own heading) -> gate
-  must not be tricked into treating that as the required section allow it
-  through when the real heading is actually missing elsewhere.
-- **Ordering-violation case**: a write to the phase-2 record when
-  `.status.json` shows `approved: pending` -> gate must deny, with a
-  distinct message from the missing-section case.
-- **Ordering-satisfied case**: same write once `.status.json` shows
-  `approved: done` -> gate must allow (assuming the nine-component
-  content check also passes).
+No single "run everything" test file is proposed — `tests/run-gate-tests.sh`
+would just source each plugin's own test file, so a broken plugin's
+tests fail attributably, not as one opaque suite failure.
 
-Each test should assert both the exit code and (where the gate produces a
-message) that the message names *which* requirement failed, so a failing
-gate is diagnosable rather than an opaque deny.
+## 7. Agents/checklists — scoped per plugin, not blanket
 
-## 5. Agents/checklists — scoped decision
+Only plugins whose methodology resists a pure regex/section check get an
+agent/checklist component (§3: `id-persona-goal`, `id-nielsen-heuristics`
+— judging "is this actually a Cooper-style persona" or "is this heuristic
+verdict genuine, not rubber-stamped" needs a walked checklist, not just
+section presence). The other eight plugins are fully mechanical
+(presence/staging/format checks) and get no agent — adding one where a
+script suffices would be the over-scoping issue-21 itself warns against.
 
-Per the task brief's own instruction not to over-scope: this proposal
-does **not** propose a new agent or checklist file at this time. The
-six/nine-item lists are already fully enumerable and are the kind of
-thing a section-presence script can check without needing an LLM-driven
-checklist walk. If phase-2 implementation finds that a purely mechanical
-check produces too many false positives (e.g., can't reliably detect
-"stub section" vs. "genuinely short but complete section"), a checklist
-or lightweight review agent becomes a fallback option — but that
-decision is deferred to phase-2 implementation experience, not
-pre-committed here, per issue-21's own instruction ("only if the gate
-machine genuinely needs them").
+## 8. What this proposal explicitly does not do
 
-## 6. What this proposal explicitly does not do
-
-- Does not create `ux-design/hooks/methodology-gate.sh` or any other
-  script file.
+- Does not create any `hooks/*.sh`, `agents/*.md`, or `tests/*.sh` file
+  for any of the eleven plugins named above.
+- Does not create any `.claude-plugin/plugin.json` or add any entry to
+  `.claude-plugin/marketplace.json`.
 - Does not modify `ux-design/hooks/directive.sh`, `hooks.json`, or
   `README.md`.
-- Does not create `tests/methodology-gate-tests.sh` or modify
-  `tests/run-gate-tests.sh`.
 - Does not copy any canon script content from core, `pricing-rulebook`,
   or `implementation-rulebook` — all references above are by path/
-  description only (and, per survey.md §1/§5, those two sibling repos
-  were not available to inspect directly in this checkout; their shape
-  is carried from the issue-21 body text, flagged as such).
+  description only; per survey.md §1/§5, those two sibling repos were
+  not available to inspect directly in this checkout, so their exact
+  shape is carried from the issue-21 body text, flagged as such.
 - Does not approve itself. Per role-handoff contract v3 s19, this
-  document is phase-1 output awaiting human review before any phase-2
-  (implementation) work begins.
+  document is phase-1 output awaiting a human Approve before any
+  phase-2 (plugin build) work begins.
