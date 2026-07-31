@@ -22,6 +22,21 @@ coding to build from without asking what goes where. Reaching
 `loop_state: reviewed` is this role's terminal record state. Spec
 only — never implementation.
 
+Every phase-1 proposal names the interaction-design methodology or
+heuristic set its recommendations derive from (e.g. Nielsen's ten
+usability heuristics, goal-directed design's persona model) and follows
+six mandatory named sections: problem/goal framing, comparison
+set/exemplars, methodology cited, what will be delivered, adopt/skip
+rationale, how it will be judged — with exemplar claims cited by source
+or explicitly labeled "established-practice assumption." Every phase-2
+deliverable carries nine mandatory components: goal/persona reference,
+a distinct interaction/task-flow artifact, complete states per
+screen/flow, a wireframe staged low-fidelity before high-fidelity, the
+full ten-item Nielsen heuristic evaluation, an accessibility floor
+conformant to WCAG 2.1 AA, a usability-test plan (not a conducted test),
+traceability/scope-growth flagging, and the spec-only output boundary.
+(`docs/issue-15/proposals/interaction-design.md`, approved.)
+
 ## What is here
 
     ux-design/hooks/directive.sh        SessionStart — the four facets:
@@ -29,15 +44,25 @@ only — never implementation.
                                         best-in-class products, interaction
                                         must-bes, platform conventions),
                                         survey (governing record + touched
-                                        screens + frozen constraints),
-                                        proposal (screens/flows traced to the
-                                        governing record; on a token-less
-                                        project, first establishes
+                                        screens + frozen constraints + the
+                                        methodology/heuristic set that will
+                                        govern the proposal, named as
+                                        missing if absent), proposal
+                                        (screens/flows traced to the
+                                        governing record; six mandatory
+                                        named sections + cited evidence
+                                        format; on a token-less project,
+                                        first establishes
                                         docs/specs/design-system.md as a
                                         proposal-gated contract), judgment
-                                        (complete states, heuristic +
-                                        accessibility floors, name-only token
-                                        references, no untraced elements)
+                                        (goal/persona reference, distinct
+                                        task-flow artifact, complete states,
+                                        low-fidelity-before-high-fidelity
+                                        staging, full ten-item Nielsen
+                                        heuristic set, accessibility floor
+                                        named to WCAG 2.1 AA, usability-test
+                                        plan, name-only token references, no
+                                        untraced elements)
     tests/                              repo-level checks (never installed)
 
 s20 record-field minimums, commit-trailer enforcement (`Subject: issue-<n>`),
@@ -53,7 +78,11 @@ ux-design) — the role definition above is the authoritative one.
 `loop_state`: `idle, drafting, reviewed` (terminal: `reviewed`). The
 record carries a non-empty pointer to the governing
 `hypothesis`/`product-record` and the screen/flow/wireframe specs or
-pointers to them.
+pointers to them, a non-empty pointer to the goal/persona reference
+used, the methodology/heuristic-set actually applied (named), and
+confirmation that all nine mandatory phase-2 components are present in
+the delivered spec — or an explicit note of which are inapplicable and
+why.
 
 ## Install
 
