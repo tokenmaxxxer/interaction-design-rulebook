@@ -9,11 +9,11 @@ following the same doctrine `coding-agent-rulebook` uses:
 - `specs/` — the authoritative, evolving specification of how this
   repository's plugin works, in particular `specs/state-machine.md`.
 - `proposals/` — this repository's own change proposals (its `warrant`-style
-  units of work), and the specification files that carry `ux-design-cycle`'s
+  units of work), and the specification files that carry `interaction-design-cycle`'s
   hypothesis state — the two share this directory by convention: a proposal
   frontmatter carries `status: proposed -> approved -> landed` for the work
   itself, while a specification file carries `status: idle -> ... ->
-  reviewed` for a ux-design hypothesis. `state-gate.sh` distinguishes them
+  reviewed` for an interaction-design hypothesis. `state-gate.sh` distinguishes them
   only by content (a proposal file has no `metric`/`threshold`/
   `decision_rule` fields), never by filename convention.
 - `_assets/` — attachments (images, diagrams) referenced by documents above.

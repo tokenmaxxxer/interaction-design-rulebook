@@ -55,7 +55,7 @@ independent of the other `id-*` plugins' gates.
 
 `hooks/directive.sh` — SessionStart directive, sourced from
 `core/hooks/lib/role-directive.sh` per this repo's convention (see
-`ux-design/hooks/directive.sh`). States YOU DECIDE / USE_WHEN /
+`interaction-design/hooks/directive.sh`). States YOU DECIDE / USE_WHEN /
 PRODUCES / HAND-OFF for the traceability/scope-growth check.
 
 ## Composition
