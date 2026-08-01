@@ -196,6 +196,11 @@ got="$(printf '%s' "$dot_payload" | env CLAUDE_PROJECT_DIR="$mtd" /bin/bash "$GA
 mcheck "mandatory: ./-prefixed file_path matches scope" 0 "$got"
 rm -rf "$mtd"
 
+# 6: missing core (CLAUDE_PLUGIN_ROOT_CORE points nowhere, no sibling
+# core/) -> fail closed (exit 2), never falls through to success.
+got="$(printf '' | env CLAUDE_PROJECT_DIR="$(mktemp -d)" CLAUDE_PLUGIN_ROOT_CORE="/nonexistent/core-$$" /bin/bash "$GATE" >/dev/null 2>&1; echo $?)"
+mcheck "mandatory: missing core fails closed" 2 "$got"
+
 [ "$mrc" -eq 0 ] || exit 1
 
 exit "$rc"

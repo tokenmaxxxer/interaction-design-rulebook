@@ -150,6 +150,11 @@ _m_check "mandatory: absolute file_path matches scope" 0 "$got"
 got="$(_run "$(payload_write "$pj_dot" "$c_pass")")"
 _m_check "mandatory: ./-prefixed file_path matches scope" 0 "$got"
 
+# mandatory 6: missing core (CLAUDE_PLUGIN_ROOT_CORE points nowhere, no
+# sibling core/) -> fail closed (exit 2), never falls through to success.
+got="$(printf '' | CLAUDE_PROJECT_DIR="$root" CLAUDE_PLUGIN_ROOT_CORE="/nonexistent/core-$$" bash "$gate" >"${TMPDIR:-/tmp}/id-task-flow-test.out" 2>"${TMPDIR:-/tmp}/id-task-flow-test.err"; echo $?)"
+_m_check "mandatory: missing core fails closed" 2 "$got"
+
 echo "---"
 echo "id-task-flow-gate-tests (mandatory block): $m_pass passed, $m_fail failed"
 if [ "$m_rc" -ne 0 ]; then

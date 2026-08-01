@@ -29,6 +29,8 @@ for t in "$repo_root"/ux-design/plugins/*/tests/*-gate-tests.sh; do
   fi
 done
 
+[ "$total" -gt 0 ] || { echo "refused: zero plugin test suites found under ux-design/plugins/*/tests/ — glob mismatch or missing directory" >&2; exit 2; }
+
 passed=$((total - failed))
 printf '\n== %d passed, %d failed (gates promoted to core canon; see tests/stub-check.sh) ==\n' "$passed" "$failed"
 [ "$failed" -eq 0 ]

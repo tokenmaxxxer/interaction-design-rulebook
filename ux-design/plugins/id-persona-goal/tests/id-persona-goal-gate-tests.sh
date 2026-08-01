@@ -226,6 +226,21 @@ else
 fi
 rm -f "$out5b"
 
+# 6) Missing core (CLAUDE_PLUGIN_ROOT_CORE points nowhere, no sibling
+# core/) -> fail closed (exit 2), never falls through to success.
+out6="$(mktemp)"
+printf '' | env CLAUDE_PROJECT_DIR="$(mktemp -d)" CLAUDE_PLUGIN_ROOT_CORE="/nonexistent/core-$$" /bin/bash "$GATE" >"$out6" 2>&1
+status6=$?
+if [ "$status6" -eq 2 ]; then
+  echo "PASS: mandatory: missing core fails closed"
+  pass=$((pass + 1))
+else
+  echo "FAIL: mandatory: missing core fails closed (status=$status6)"
+  cat "$out6" >&2
+  mandatory_fail=$((mandatory_fail + 1))
+fi
+rm -f "$out6"
+
 if [ "$mandatory_fail" -ne 0 ]; then
   echo ""
   echo "id-persona-goal-gate-tests: $mandatory_fail mandatory case(s) failed"
