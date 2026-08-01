@@ -285,6 +285,16 @@ else
   echo "FAIL - mandatory: ./-prefixed file_path matches scope: expected rc=0, got rc=$rc; output: $out" >&2; m_fail=$((m_fail+1))
 fi
 
+# 6. Missing core (CLAUDE_PLUGIN_ROOT_CORE points nowhere, no sibling
+# core/) -> fail closed (exit 2), never falls through to success.
+out="$(printf '' | env CLAUDE_PROJECT_DIR="$(mktemp -d)" CLAUDE_PLUGIN_ROOT_CORE="/nonexistent/core-$$" /bin/bash "$gate" 2>&1)"
+rc=$?
+if [ "$rc" = 2 ]; then
+  echo "ok - mandatory: missing core fails closed"; m_pass=$((m_pass+1))
+else
+  echo "FAIL - mandatory: missing core fails closed: expected rc=2, got rc=$rc; output: $out" >&2; m_fail=$((m_fail+1))
+fi
+
 echo "id-accessibility-floor-gate-tests (mandatory block): $m_pass passed, $m_fail failed"
 [ "$m_fail" -eq 0 ] || exit 1
 

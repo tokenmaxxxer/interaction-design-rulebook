@@ -293,6 +293,16 @@ else
 fi
 rm -rf "$td_e7"
 
+# --- mandatory: missing core fails closed ------------------------------------
+out_e8="$(printf '' | env CLAUDE_PROJECT_DIR="$(mk_tmp)" CLAUDE_PLUGIN_ROOT_CORE="/nonexistent/core-$$" /bin/bash "$gate" 2>&1)"
+code_e8=$?
+if [ "$code_e8" = 2 ]; then
+  echo "id-proposal-shape-gate-tests: ok — mandatory: missing core fails closed"
+else
+  echo "id-proposal-shape-gate-tests: FAIL — mandatory: missing core fails closed: got exit $code_e8: $out_e8" >&2
+  mrc=1
+fi
+
 if [ "$mrc" -ne 0 ]; then
   exit 1
 fi

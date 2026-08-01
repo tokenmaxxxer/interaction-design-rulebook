@@ -188,6 +188,22 @@ dot_payload="$(printf '{"tool_name":"Write","tool_input":{"file_path":"%s","cont
 m_run "mandatory: ./-prefixed file_path matches scope" 0 "$dot_payload" "$td6"
 rm -rf "$td6"
 
+# 7) Missing core (CLAUDE_PLUGIN_ROOT_CORE points nowhere, no sibling
+# core/) -> fail closed (exit 2), never falls through to success.
+td7="$(mktemp -d)"
+git init -q "$td7"
+out7="$(printf '' | env CLAUDE_PROJECT_DIR="$td7" CLAUDE_PLUGIN_ROOT_CORE="/nonexistent/core-$$" /bin/bash "$gate" 2>&1)"
+rc7=$?
+if [ "$rc7" -eq 2 ]; then
+  echo "PASS: mandatory: missing core fails closed (rc=$rc7)"
+  m_pass=$((m_pass + 1))
+else
+  echo "FAIL: mandatory: missing core fails closed (expected rc=2, got rc=$rc7)"
+  echo "  output: $out7"
+  m_fail=$((m_fail + 1))
+fi
+rm -rf "$td7"
+
 echo
 echo "id-usability-test-plan-gate-tests (mandatory block): $m_pass passed, $m_fail failed"
 [ "$m_fail" -eq 0 ] || exit 1

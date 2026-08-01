@@ -277,6 +277,19 @@ fi
 rm -f "$mand_err5b"
 rm -rf "$mand_td5"
 
+# mandatory 6: missing core (CLAUDE_PLUGIN_ROOT_CORE points nowhere, no
+# sibling core/) -> fail closed (exit 2), never falls through to success.
+mand_err6="$(mktemp)"
+printf '' | env CLAUDE_PROJECT_DIR="$(mktemp -d)" CLAUDE_PLUGIN_ROOT_CORE="/nonexistent/core-$$" /bin/bash "$gate" >/dev/null 2>"$mand_err6"
+mand_got6=$?
+if [ "$mand_got6" -eq 2 ]; then
+  echo "ok — mandatory: missing core fails closed"
+else
+  echo "FAIL — mandatory: missing core fails closed: expected deny (rc=2), got rc=$mand_got6: $(cat "$mand_err6" 2>/dev/null)"
+  mand_rc=1
+fi
+rm -f "$mand_err6"
+
 [ "$mand_rc" -eq 0 ] || exit 1
 
 exit "$rc"

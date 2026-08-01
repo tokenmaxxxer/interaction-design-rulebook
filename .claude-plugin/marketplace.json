@@ -1,13 +1,13 @@
 {
-  "name": "tokenmaxxxer-ux-design",
+  "name": "tokenmaxxxer-interaction-design",
   "owner": {
     "name": "Jung Jiwon & Lee Jongkwan"
   },
   "plugins": [
     {
-      "name": "ux-design",
+      "name": "interaction-design",
       "source": "./ux-design",
-      "description": "The ux-design role on contract v3: turns the accepted problem (governing hypothesis/product-record) into screen/flow/wireframe specs concrete enough to build from. Directive carries the four facets \u2014 same-job exemplar research, governing-record survey, spec proposal, and a quality bar (complete states, heuristic + accessibility floors, every element traced to a recorded need). Spec only, never implementation; loop_state reviewed is this role's terminal record state. PRODUCES points to the eleven id-* methodology plugins below \u2014 see each plugin's own directive for phase-specific steps/criteria/prohibitions."
+      "description": "The interaction-design role on contract v3: turns the accepted problem (governing hypothesis/product-record) into screen/flow/wireframe specs concrete enough to build from. Directive carries the four facets \u2014 same-job exemplar research, governing-record survey, spec proposal, and a quality bar (complete states, heuristic + accessibility floors, every element traced to a recorded need). Spec only, never implementation; loop_state reviewed is this role's terminal record state. PRODUCES points to the eleven id-* methodology plugins below \u2014 see each plugin's own directive for phase-specific steps/criteria/prohibitions."
     },
     {
       "name": "id-proposal-shape",

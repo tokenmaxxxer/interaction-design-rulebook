@@ -173,6 +173,14 @@ m_check "mandatory: ./-prefixed file_path matches scope" 0 $?
 teardown
 [ "$m_fail" -ne 0 ] && { rm -f "${TMPDIR:-/tmp}/wsg_out" "${TMPDIR:-/tmp}/wsg_err"; exit 1; }
 
+# 6) Missing core (CLAUDE_PLUGIN_ROOT_CORE points nowhere, no sibling
+# core/) -> fail closed (exit 2), never falls through to success.
+setup
+got6="$(printf '' | env CLAUDE_PROJECT_DIR="$TEST_REPO" CLAUDE_PLUGIN_ROOT_CORE="/nonexistent/core-$$" bash "$GATE" >"${TMPDIR:-/tmp}/wsg_out" 2>"${TMPDIR:-/tmp}/wsg_err"; echo $?)"
+m_check "mandatory: missing core fails closed" 2 "$got6"
+teardown
+[ "$m_fail" -ne 0 ] && { rm -f "${TMPDIR:-/tmp}/wsg_out" "${TMPDIR:-/tmp}/wsg_err"; exit 1; }
+
 if [ "$fail" -ne 0 ]; then
   echo "id-wireframe-staging-gate-tests: FAIL" >&2
   exit 1

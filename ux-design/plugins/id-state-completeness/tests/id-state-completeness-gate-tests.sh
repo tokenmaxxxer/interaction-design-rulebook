@@ -279,6 +279,14 @@ PY
   rm -f "$out"
 }
 
+{
+  out="$(mktemp)"
+  printf '' | env CLAUDE_PROJECT_DIR="$(mktemp -d)" CLAUDE_PLUGIN_ROOT_CORE="/nonexistent/core-$$" /bin/bash "$GATE" >"$out" 2>&1
+  got=$?
+  mcheck "mandatory: missing core fails closed" 2 "$got" "$out"
+  rm -f "$out"
+}
+
 [ "$mrc" -eq 0 ] || exit 1
 
 exit "$rc"

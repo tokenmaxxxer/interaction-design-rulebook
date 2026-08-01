@@ -1,7 +1,8 @@
-# tokenmaxxxer / ux-design-rulebook
+# tokenmaxxxer / interaction-design-rulebook
 
-The `ux-design` role on contract v3. A ux-design session is spawned with
-two plugin sets installed: this marketplace's `ux-design` plugin, and the
+The `interaction-design` role on contract v3. An interaction-design
+session is spawned with two plugin sets installed: this marketplace's
+`interaction-design` plugin, and the
 [tokenmaxxxer-core](https://github.com/tokenmaxxxer/tokenmaxxxer-core)
 plugins (`core`, `terse`, `freelunch`, `scout`, `warrant`). Core owns the
 interaction protocol — issue in, two-phase PR out
@@ -10,15 +11,15 @@ interaction protocol — issue in, two-phase PR out
 `docs/issue-<n>/reports/interaction-design.md` — and the role-agnostic
 review gates (trailer/record-fields/handbook-trigger),
 fired globally by `core/hooks/hooks.json` for every plugin install. This
-rulebook owns only what is ux-design-specific: `directive.sh`'s four
-role-unique values.
+rulebook owns only what is interaction-design-specific: `directive.sh`'s
+four role-unique values.
 
-## What `ux-design` decides
+## What `interaction-design` decides
 
 How the accepted problem becomes screens, flows, and interaction — the
 experience risk. The governing hypothesis / product-record supplies the
-WHAT (product's call); ux-design owns the HOW a user moves through it,
-and delivers a screen/flow/wireframe specification concrete enough for
+WHAT (product's call); interaction-design owns the HOW a user moves
+through it, and delivers a screen/flow/wireframe specification concrete enough for
 coding to build from without asking what goes where. Reaching
 `loop_state: reviewed` is this role's terminal record state. Spec
 only — never implementation.
@@ -60,8 +61,9 @@ other value including an unrecognized one stays active), malformed-JSON
 deny, absolute/`./`-prefixed path normalization
 (`gate_normalize_path`), and full `Edit`/`MultiEdit` reconstruction
 honoring each edit's own `replace_all`
-(`gate_reconstruct_write`). `docs/handbooks/gate-house-standard.md`'s own
-`core/hooks/tests/compliance-check.sh` is the closing acceptance check.
+(`gate_reconstruct_write`). `docs/handbooks/gate-house-standard.md`
+(in `core`)'s own `core/hooks/tests/compliance-check.sh` is the closing
+acceptance check.
 
 ## What is here
 
@@ -97,7 +99,7 @@ no local copy lives in this rulebook.
 
 This revision also retires the stale product-rulebook prose this README
 used to carry (a copy-paste role description that was factually wrong for
-ux-design) — the role definition above is the authoritative one.
+interaction-design) — the role definition above is the authoritative one.
 
 ## Record vocabulary
 
@@ -112,8 +114,8 @@ why.
 
 ## Install
 
-    claude plugin marketplace add tokenmaxxxer/ux-design-rulebook
-    claude plugin install ux-design@tokenmaxxxer-ux-design
+    claude plugin marketplace add tokenmaxxxer/interaction-design-rulebook
+    claude plugin install interaction-design@tokenmaxxxer-interaction-design
 
 There is no repo-wide kill switch — each of the eleven `id-*` gates has
 its own, independent one: `ID_PROPOSAL_SHAPE_GATE_OFF`,

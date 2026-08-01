@@ -274,6 +274,16 @@ print(json.dumps({
 run_tool_case "mandatory: ./-prefixed file_path matches scope" allow "$td5" "$dotslash_payload"
 rm -rf "$td5"
 
+# 6. Missing core (CLAUDE_PLUGIN_ROOT_CORE points nowhere, no sibling
+# core/) -> fail closed (exit 2), never falls through to success.
+td6="$(mktemp -d)"; git init -q "$td6"
+errfile6="$(mktemp)"
+printf '' | env CLAUDE_PROJECT_DIR="$td6" CLAUDE_PLUGIN_ROOT_CORE="/nonexistent/core-$$" /bin/bash "$gate" >/dev/null 2>"$errfile6"
+got_rc6=$?
+err6="$(cat "$errfile6" 2>/dev/null || true)"; rm -f "$errfile6"
+if [ "$got_rc6" -eq 2 ]; then echo "ok — mandatory: missing core fails closed"; else echo "FAIL — mandatory: missing core fails closed: expected rc=2, got rc=$got_rc6: $err6"; mrc=1; fi
+rm -rf "$td6"
+
 [ "$mrc" -eq 0 ] || exit 1
 
 exit "$rc"

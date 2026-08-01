@@ -99,6 +99,14 @@ try:
         p = ti.get("file_path")
         if isinstance(p, str) and p:
             path = p
+    elif tool == "Bash":
+        cmdline = ti.get("command")
+        if isinstance(cmdline, str):
+            for tok in re.findall(r'[A-Za-z0-9_./~$-]+', cmdline):
+                rel_try = gate_lib.gate_normalize_path(root, tok)
+                if (RECORD_RE.match(rel_try) if rel_try else False):
+                    path = tok
+                    break
     if path is None:
         sys.exit(0)
 

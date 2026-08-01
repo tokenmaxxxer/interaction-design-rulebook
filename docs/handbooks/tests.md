@@ -14,7 +14,10 @@ Repo-level checks under `tests/`, never installed as plugin hooks.
   `ux-design/plugins/*/tests/*-gate-tests.sh` suite, running each (still
   surfacing its own output for attribution, per issue-21 §6) and exiting
   non-zero if any fail, so a reviewer running only this one script gets
-  an accurate combined signal for the eleven `id-*` plugin gates.
+  an accurate combined signal for the eleven `id-*` plugin gates. As of
+  issue-27, it also refuses (exit 2) with an explicit message if the
+  glob under `ux-design/plugins/*/tests/` matches zero suites, instead
+  of silently reporting a false-green `0 passed, 0 failed`.
 - `deny-only-check.sh` — greps for a hook emitting `permissionDecision:
   allow` (gates may only pass through or refuse) and probes that any
   `*-gate.sh` still under `ux-design/hooks/` refuses an empty record.

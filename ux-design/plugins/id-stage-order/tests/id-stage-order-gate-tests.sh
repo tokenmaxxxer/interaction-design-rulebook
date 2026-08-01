@@ -187,6 +187,16 @@ else
 fi
 rm -rf "$td_m5"
 
+# --- mandatory: missing core fails closed -----------------------------------
+out_m6="$(printf '' | env CLAUDE_PROJECT_DIR="$(mk_tmp)" CLAUDE_PLUGIN_ROOT_CORE="/nonexistent/core-$$" /bin/bash "$gate" 2>&1)"
+code_m6=$?
+if [ "$code_m6" = 2 ]; then
+  echo "id-stage-order-gate-tests: ok — mandatory: missing core fails closed"
+else
+  echo "id-stage-order-gate-tests: FAIL — mandatory: missing core fails closed: expected exit 2, got exit $code_m6: $out_m6" >&2
+  mrc=1
+fi
+
 if [ "$mrc" != 0 ]; then
   exit 1
 fi
