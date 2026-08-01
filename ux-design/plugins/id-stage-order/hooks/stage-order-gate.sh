@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
-__fc(){ rc=$?; if [ "$rc" != 0 ] && [ "$rc" != 2 ]; then echo "fail-closed: gate aborted (rc=$rc)" >&2; exit 2; fi; }
-trap __fc EXIT
+. "${CLAUDE_PLUGIN_ROOT_CORE:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../../core" && pwd -P)}/hooks/lib/gate-lib.sh" 2>/dev/null || {
+  echo "$(basename "${BASH_SOURCE[0]}"): refused — core gate-lib.sh could not be sourced (CLAUDE_PLUGIN_ROOT_CORE unset/wrong and no sibling core/ found); failing closed rather than running without the shared fail-closed/kill-switch machinery." >&2
+  exit 2
+}
+gate_trap_fail_closed
 # PreToolUse gate (Write|Edit|MultiEdit) — id-stage-order plugin's own
 # gate. Owns exactly one cross-cutting constraint: the interaction-design
 # methodology's stage ordering (survey -> scout -> proposal ->
@@ -37,10 +40,7 @@ set -uo pipefail
 
 deny() { echo "id-stage-order: refused — $1" >&2; exit 2; }
 
-case "${ID_STAGE_ORDER_GATE_OFF:-}" in
-  ""|0|false|no|off) ;;
-  *) exit 0 ;;
-esac
+gate_kill_switch_active "${ID_STAGE_ORDER_GATE_OFF:-}" || exit 0
 
 command -v python3 >/dev/null 2>&1 || deny "stage-order-gate.sh requires python3, which is not on PATH; denying rather than guessing."
 
@@ -88,18 +88,15 @@ python3 <<'PY'
 import sys as _fc_sys  # fail-closed-on-internal-error
 try:
     import json, os, posixpath, re, sys
+    import importlib.util
+    _spec = importlib.util.spec_from_file_location("gate_lib", os.environ["GATE_LIB_PY"])
+    gate_lib = importlib.util.module_from_spec(_spec); _spec.loader.exec_module(gate_lib)
 
     def deny(m):
         sys.stderr.write("id-stage-order: refused — %s\n" % m); sys.exit(2)
 
     raw = os.environ.get("SG_PAYLOAD", "")
-    try:
-        ev = json.loads(raw) if raw else {}
-    except ValueError:
-        deny("the tool-call payload is not valid JSON; the gate cannot judge stage ordering on an unparseable write.")
-    if not isinstance(ev, dict):
-        deny("the tool-call payload is not a JSON object; failing closed on stage-order.")
-
+    ev = gate_lib.gate_parse_json_or_deny(raw, deny)
     tool = ev.get("tool_name")
     ti = ev.get("tool_input")
     if not isinstance(ti, dict):
@@ -109,15 +106,6 @@ try:
     PROPOSAL_RE = re.compile(r'^docs/issue-([0-9]+)/proposals/.*\.md$')
     RECORD_RE = re.compile(r'^docs/issue-([0-9]+)/reports/interaction-design\.md$')
 
-    def resolve(p):
-        n = p.replace("\\", "/")
-        a = n if posixpath.isabs(n) else posixpath.join(root, n)
-        a = posixpath.normpath(a)
-        try:
-            return posixpath.normpath(os.path.realpath(a).replace("\\", "/"))
-        except OSError:
-            return a
-
     path = None
     if tool in ("Write", "Edit", "MultiEdit"):
         p = ti.get("file_path")
@@ -126,10 +114,10 @@ try:
     if path is None:
         sys.exit(0)
 
-    r = resolve(path)
-    if not r.startswith(root + "/"):
+    rel = gate_lib.gate_normalize_path(root, path)
+    if rel is None:
         sys.exit(0)
-    rel = r[len(root):].lstrip("/")
+    r = posixpath.join(root, rel) if rel else root
 
     def update_status(issue_n, stage):
         try:

@@ -86,4 +86,116 @@ check "e: no heading denies" 2 "$got"
 got="$(run_gate "docs/issue-999/reports/unrelated.md" "$(json_str "no gate content at all")")"
 check "f: unrelated path allows (not this gate's surface)" 0 "$got"
 
+## --- mandatory additional cases (Edit/MultiEdit reconstruction, malformed
+## JSON, kill switch, path scoping) ---
+mrc=0
+mcheck() {
+  local name="$1" expect="$2" got="$3"
+  if [ "$got" = "$expect" ]; then
+    echo "ok - $name"
+  else
+    echo "FAIL - $name (expected exit $expect, got $got)" >&2
+    mrc=1
+  fi
+}
+
+# 1: Edit replace_all:true replaces every occurrence
+mtd="$(mktemp -d)"
+git init -q "$mtd"
+mkdir -p "$mtd/docs/issue-999/reports"
+content_edit_base='# Traceability and scope growth
+
+This deliverable is spec-only: output is specification, never src/ code.
+BENIGN_MARKER here.
+- Scope growth: none
+BENIGN_MARKER again.
+'
+printf '%s' "$content_edit_base" > "$mtd/docs/issue-999/reports/interaction-design.md"
+edit_payload=$(python3 -c '
+import json
+ti = {
+    "file_path": "docs/issue-999/reports/interaction-design.md",
+    "old_string": "BENIGN_MARKER",
+    "new_string": "REPLACED_MARKER",
+    "replace_all": True,
+}
+print(json.dumps({"tool_name": "Edit", "tool_input": ti}))
+')
+got="$(printf '%s' "$edit_payload" | env CLAUDE_PROJECT_DIR="$mtd" /bin/bash "$GATE" >/dev/null 2>&1; echo $?)"
+# Both markers replaced -> content is still fully valid (spec-only + scope growth intact) -> allow
+mcheck "mandatory: Edit replace_all replaces every occurrence" 0 "$got"
+rm -rf "$mtd"
+
+# 2: MultiEdit honors per-edit replace_all
+mtd="$(mktemp -d)"
+git init -q "$mtd"
+mkdir -p "$mtd/docs/issue-999/reports"
+content_me_base='# Traceability and scope growth
+
+This deliverable is spec-only: output is specification, never src/ code.
+DUPE_TOKEN one. DUPE_TOKEN two. DUPE_TOKEN three.
+- Scope growth: SINGLE_TOKEN
+'
+printf '%s' "$content_me_base" > "$mtd/docs/issue-999/reports/interaction-design.md"
+multiedit_payload=$(python3 -c '
+import json
+ti = {
+    "file_path": "docs/issue-999/reports/interaction-design.md",
+    "edits": [
+        {"old_string": "DUPE_TOKEN", "new_string": "DUPE_REPLACED", "replace_all": True},
+        {"old_string": "SINGLE_TOKEN", "new_string": "none", "replace_all": False},
+    ],
+}
+print(json.dumps({"tool_name": "MultiEdit", "tool_input": ti}))
+')
+got="$(printf '%s' "$multiedit_payload" | env CLAUDE_PROJECT_DIR="$mtd" /bin/bash "$GATE" >/dev/null 2>&1; echo $?)"
+# All DUPE_TOKEN occurrences replaced, SINGLE_TOKEN replaced once -> spec-only + scope-growth still present -> allow
+mcheck "mandatory: MultiEdit honors per-edit replace_all" 0 "$got"
+rm -rf "$mtd"
+
+# 3: malformed JSON on stdin denies
+mtd="$(mktemp -d)"
+git init -q "$mtd"
+got="$(printf '{"tool_name":"Write","tool_input":{' | env CLAUDE_PROJECT_DIR="$mtd" /bin/bash "$GATE" >/dev/null 2>&1; echo $?)"
+mcheck "mandatory: malformed JSON denies" 2 "$got"
+rm -rf "$mtd"
+
+# 3b: empty payload denies
+mtd="$(mktemp -d)"
+git init -q "$mtd"
+got="$(printf '' | env CLAUDE_PROJECT_DIR="$mtd" /bin/bash "$GATE" >/dev/null 2>&1; echo $?)"
+mcheck "mandatory: empty payload denies" 2 "$got"
+rm -rf "$mtd"
+
+# 4: kill switch unrecognized value stays active (still denies on deny-fixture content)
+got="$(printf '{"tool_name":"Write","tool_input":{"file_path":"%s","content":%s}}' \
+  "$REC" "$(json_str "$content_b")" \
+  | env CLAUDE_PROJECT_DIR="$(mktemp -d)" ID_TRACEABILITY_GATE_OFF="banana" /bin/bash "$GATE" >/dev/null 2>&1; echo $?)"
+mcheck "mandatory: kill switch unrecognized value stays active" 2 "$got"
+
+# 5: absolute file_path and ./-prefixed file_path both match scope (passing content)
+mtd="$(mktemp -d)"
+git init -q "$mtd"
+abs_payload=$(python3 -c '
+import json, sys
+td = sys.argv[1]
+content = sys.argv[2]
+ti = {"file_path": td + "/docs/issue-999/reports/interaction-design.md", "content": content}
+print(json.dumps({"tool_name": "Write", "tool_input": ti}))
+' "$mtd" "$content_a")
+got="$(printf '%s' "$abs_payload" | env CLAUDE_PROJECT_DIR="$mtd" /bin/bash "$GATE" >/dev/null 2>&1; echo $?)"
+mcheck "mandatory: absolute file_path matches scope" 0 "$got"
+
+dot_payload=$(python3 -c '
+import json, sys
+content = sys.argv[1]
+ti = {"file_path": "./docs/issue-999/reports/interaction-design.md", "content": content}
+print(json.dumps({"tool_name": "Write", "tool_input": ti}))
+' "$content_a")
+got="$(printf '%s' "$dot_payload" | env CLAUDE_PROJECT_DIR="$mtd" /bin/bash "$GATE" >/dev/null 2>&1; echo $?)"
+mcheck "mandatory: ./-prefixed file_path matches scope" 0 "$got"
+rm -rf "$mtd"
+
+[ "$mrc" -eq 0 ] || exit 1
+
 exit "$rc"

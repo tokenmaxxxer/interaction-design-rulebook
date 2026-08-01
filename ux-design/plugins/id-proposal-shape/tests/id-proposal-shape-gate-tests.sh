@@ -135,4 +135,166 @@ else
 fi
 rm -rf "$td_d"
 
+# =============================================================================
+# mandatory: gate-lib shared-contract cases (edit reconstruction, malformed
+# JSON, kill switch unrecognized value, absolute/./-prefixed path scoping)
+# =============================================================================
+mrc=0
+
+# --- mandatory: Edit replace_all replaces every occurrence -----------------
+EDIT_BASE='# Proposal
+
+## Problem framing
+MARKERTOKEN This is the problem statement, not blank. MARKERTOKEN
+
+## Comparison set
+Compared alternatives here. MARKERTOKEN
+
+## Methodology cited
+Nielsen heuristics cited.
+
+## Delivery scope
+Out of scope: X, Y.
+
+## Adopt/skip
+Adopt A, skip B.
+
+## Judged-by
+Judged by gate tests.
+'
+td_e1="$(mk_tmp)"
+rel_e1="docs/issue-999/proposals/e1.md"
+printf '%s' "$EDIT_BASE" > "$td_e1/$rel_e1"
+payload_e1="$(python3 -c '
+import json,sys
+print(json.dumps({"tool_name":"Edit","tool_input":{"file_path":sys.argv[1],"old_string":"MARKERTOKEN","new_string":"REPLACEDTOKEN","replace_all":True},"cwd":sys.argv[2]}))
+' "$rel_e1" "$td_e1")"
+out_e1="$(printf '%s' "$payload_e1" | env CLAUDE_PROJECT_DIR="$td_e1" /bin/bash "$gate" 2>&1)"
+code_e1=$?
+if [ "$code_e1" = 0 ]; then
+  echo "id-proposal-shape-gate-tests: ok — mandatory: Edit replace_all replaces every occurrence"
+else
+  echo "id-proposal-shape-gate-tests: FAIL — mandatory: Edit replace_all replaces every occurrence: got exit $code_e1: $out_e1" >&2
+  mrc=1
+fi
+rm -rf "$td_e1"
+
+# --- mandatory: MultiEdit honors per-edit replace_all -----------------------
+ME_BASE='# Proposal
+
+## Problem framing
+DUPWORD problem statement here. DUPWORD again.
+
+## Comparison set
+Compared alternatives here. UNIQUEWORD present once.
+
+## Methodology cited
+Nielsen heuristics cited.
+
+## Delivery scope
+Out of scope: X, Y.
+
+## Adopt/skip
+Adopt A, skip B.
+
+## Judged-by
+Judged by gate tests.
+'
+td_e2="$(mk_tmp)"
+rel_e2="docs/issue-999/proposals/e2.md"
+printf '%s' "$ME_BASE" > "$td_e2/$rel_e2"
+payload_e2="$(python3 -c '
+import json,sys
+edits=[
+  {"old_string":"DUPWORD","new_string":"DUPFIXED","replace_all":True},
+  {"old_string":"UNIQUEWORD","new_string":"UNIQUEFIXED","replace_all":False},
+]
+print(json.dumps({"tool_name":"MultiEdit","tool_input":{"file_path":sys.argv[1],"edits":edits},"cwd":sys.argv[2]}))
+' "$rel_e2" "$td_e2")"
+out_e2="$(printf '%s' "$payload_e2" | env CLAUDE_PROJECT_DIR="$td_e2" /bin/bash "$gate" 2>&1)"
+code_e2=$?
+if [ "$code_e2" = 0 ]; then
+  echo "id-proposal-shape-gate-tests: ok — mandatory: MultiEdit honors per-edit replace_all"
+else
+  echo "id-proposal-shape-gate-tests: FAIL — mandatory: MultiEdit honors per-edit replace_all: got exit $code_e2: $out_e2" >&2
+  mrc=1
+fi
+rm -rf "$td_e2"
+
+# --- mandatory: malformed JSON denies / empty payload denies ---------------
+td_e3="$(mk_tmp)"
+out_e3="$(printf '{"tool_name": "Write", "tool_in' | env CLAUDE_PROJECT_DIR="$td_e3" /bin/bash "$gate" 2>&1)"
+code_e3=$?
+if [ "$code_e3" = 2 ]; then
+  echo "id-proposal-shape-gate-tests: ok — mandatory: malformed JSON denies"
+else
+  echo "id-proposal-shape-gate-tests: FAIL — mandatory: malformed JSON denies: got exit $code_e3: $out_e3" >&2
+  mrc=1
+fi
+rm -rf "$td_e3"
+
+td_e4="$(mk_tmp)"
+out_e4="$(printf '' | env CLAUDE_PROJECT_DIR="$td_e4" /bin/bash "$gate" 2>&1)"
+code_e4=$?
+if [ "$code_e4" = 2 ]; then
+  echo "id-proposal-shape-gate-tests: ok — mandatory: empty payload denies"
+else
+  echo "id-proposal-shape-gate-tests: FAIL — mandatory: empty payload denies: got exit $code_e4: $out_e4" >&2
+  mrc=1
+fi
+rm -rf "$td_e4"
+
+# --- mandatory: kill switch unrecognized value stays active ----------------
+td_e5="$(mk_tmp)"
+payload_e5="$(python3 -c '
+import json,sys
+print(json.dumps({"tool_name":"Write","tool_input":{"file_path":sys.argv[1],"content":sys.argv[2]},"cwd":sys.argv[3]}))
+' "docs/issue-999/proposals/x.md" "$MISSING_JUDGED" "$td_e5")"
+out_e5="$(printf '%s' "$payload_e5" | env CLAUDE_PROJECT_DIR="$td_e5" ID_PROPOSAL_SHAPE_GATE_OFF="banana" /bin/bash "$gate" 2>&1)"
+code_e5=$?
+if [ "$code_e5" = 2 ]; then
+  echo "id-proposal-shape-gate-tests: ok — mandatory: kill switch unrecognized value stays active"
+else
+  echo "id-proposal-shape-gate-tests: FAIL — mandatory: kill switch unrecognized value stays active: got exit $code_e5: $out_e5" >&2
+  mrc=1
+fi
+rm -rf "$td_e5"
+
+# --- mandatory: absolute file_path matches scope ----------------------------
+td_e6="$(mk_tmp)"
+abs_path_e6="$td_e6/docs/issue-999/proposals/x.md"
+payload_e6="$(python3 -c '
+import json,sys
+print(json.dumps({"tool_name":"Write","tool_input":{"file_path":sys.argv[1],"content":sys.argv[2]},"cwd":sys.argv[3]}))
+' "$abs_path_e6" "$ALL_SIX" "$td_e6")"
+out_e6="$(printf '%s' "$payload_e6" | env CLAUDE_PROJECT_DIR="$td_e6" /bin/bash "$gate" 2>&1)"
+code_e6=$?
+if [ "$code_e6" = 0 ]; then
+  echo "id-proposal-shape-gate-tests: ok — mandatory: absolute file_path matches scope"
+else
+  echo "id-proposal-shape-gate-tests: FAIL — mandatory: absolute file_path matches scope: got exit $code_e6: $out_e6" >&2
+  mrc=1
+fi
+rm -rf "$td_e6"
+
+# --- mandatory: ./-prefixed file_path matches scope -------------------------
+td_e7="$(mk_tmp)"
+payload_e7="$(python3 -c '
+import json,sys
+print(json.dumps({"tool_name":"Write","tool_input":{"file_path":sys.argv[1],"content":sys.argv[2]},"cwd":sys.argv[3]}))
+' "./docs/issue-999/proposals/x.md" "$ALL_SIX" "$td_e7")"
+out_e7="$(printf '%s' "$payload_e7" | env CLAUDE_PROJECT_DIR="$td_e7" /bin/bash "$gate" 2>&1)"
+code_e7=$?
+if [ "$code_e7" = 0 ]; then
+  echo "id-proposal-shape-gate-tests: ok — mandatory: ./-prefixed file_path matches scope"
+else
+  echo "id-proposal-shape-gate-tests: FAIL — mandatory: ./-prefixed file_path matches scope: got exit $code_e7: $out_e7" >&2
+  mrc=1
+fi
+rm -rf "$td_e7"
+
+if [ "$mrc" -ne 0 ]; then
+  exit 1
+fi
+
 exit "$rc"
