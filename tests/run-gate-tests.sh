@@ -8,7 +8,7 @@
 # a local copy silently reappearing.
 #
 # issue-24: this file gains one job — aggregate the eleven
-# ux-design/plugins/*/tests/*-gate-tests.sh suites into one combined
+# interaction-design/plugins/*/tests/*-gate-tests.sh suites into one combined
 # pass/fail signal, so a reviewer running only this script gets an
 # accurate result (each plugin suite still runs and prints its own
 # output for attribution, per issue-21 §6 — this is an aggregator, not a
@@ -19,7 +19,7 @@ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 total=0
 failed=0
 
-for t in "$repo_root"/ux-design/plugins/*/tests/*-gate-tests.sh; do
+for t in "$repo_root"/interaction-design/plugins/*/tests/*-gate-tests.sh; do
   [ -f "$t" ] || continue
   total=$((total + 1))
   echo "== $t =="
@@ -29,7 +29,7 @@ for t in "$repo_root"/ux-design/plugins/*/tests/*-gate-tests.sh; do
   fi
 done
 
-[ "$total" -gt 0 ] || { echo "refused: zero plugin test suites found under ux-design/plugins/*/tests/ — glob mismatch or missing directory" >&2; exit 2; }
+[ "$total" -gt 0 ] || { echo "refused: zero plugin test suites found under interaction-design/plugins/*/tests/ — glob mismatch or missing directory" >&2; exit 2; }
 
 passed=$((total - failed))
 printf '\n== %d passed, %d failed (gates promoted to core canon; see tests/stub-check.sh) ==\n' "$passed" "$failed"

@@ -1,5 +1,8 @@
 {
   "issue-30": {
-    "proposal_shape": "ok"
+    "task_flow": "ok",
+    "nielsen_heuristics": "ok",
+    "usability_test_plan": "ok",
+    "traceability": "ok"
   }
 }

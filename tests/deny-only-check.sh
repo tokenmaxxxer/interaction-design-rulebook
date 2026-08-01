@@ -40,8 +40,8 @@ else
   echo "deny-only-check: ok — no permissionDecision allow under $dir"
 fi
 
-# --- substance probe: an empty ux-design record must be refused -----------
-probe_dir="${1:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../ux-design/hooks" && pwd -P)}"
+# --- substance probe: an empty interaction-design record must be refused --
+probe_dir="${1:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../interaction-design/hooks" && pwd -P)}"
 rec_rel="docs/issue-999/reports/interaction-design.md"
 
 substance_probe() {
@@ -58,7 +58,7 @@ substance_probe() {
   done
   rm -rf "$td"
   if [ "$refused" = 0 ]; then
-    echo "deny-only-check: FAIL — no gate refuses an empty ux-design record at $rec_rel (contract s20)" >&2
+    echo "deny-only-check: FAIL — no gate refuses an empty interaction-design record at $rec_rel (contract s20)" >&2
     return 1
   fi
   return 0

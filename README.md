@@ -41,7 +41,7 @@ traceability/scope-growth flagging, and the spec-only output boundary.
 
 As of issue-21, these norms are machine-enforced, not prose-only: eleven
 self-contained, independently kill-switchable plugins under
-`ux-design/plugins/<name>/`, each owning exactly one methodology and
+`interaction-design/plugins/<name>/`, each owning exactly one methodology and
 registered as its own `.claude-plugin/marketplace.json` entry —
 `id-proposal-shape` and `id-citation-format` (phase 1), `id-persona-goal`,
 `id-task-flow`, `id-state-completeness`, `id-wireframe-staging`,
@@ -67,7 +67,7 @@ acceptance check.
 
 ## What is here
 
-    ux-design/hooks/directive.sh        SessionStart — the four facets:
+    interaction-design/hooks/directive.sh SessionStart — the four facets:
                                         research (same-job flows of
                                         best-in-class products, interaction
                                         must-bes, platform conventions),
@@ -138,14 +138,14 @@ has no `env` field, so this rulebook cannot set it from its own
 ## Run the checks
 
     /bin/bash tests/parse-check.sh
-    /bin/bash tests/parse-check.sh ux-design/plugins
+    /bin/bash tests/parse-check.sh interaction-design/plugins
     /bin/bash tests/run-gate-tests.sh
     /bin/bash tests/deny-only-check.sh
-    /bin/bash tests/deny-only-check.sh ux-design/plugins
-    /bin/bash tests/stub-check.sh ux-design/hooks
-    /bin/bash tests/stub-check.sh ux-design/plugins
+    /bin/bash tests/deny-only-check.sh interaction-design/plugins
+    /bin/bash tests/stub-check.sh interaction-design/hooks
+    /bin/bash tests/stub-check.sh interaction-design/plugins
 
-Each `ux-design/plugins/<name>/tests/<name>-gate-tests.sh` also runs
+Each `interaction-design/plugins/<name>/tests/<name>-gate-tests.sh` also runs
 independently on its own — a broken plugin's tests still fail
 attributably, with its own output, not as one opaque failure (per the
 approved
@@ -154,6 +154,6 @@ approved
 exits non-zero if any fail, so a reviewer running only that one script
 gets an accurate combined signal (issue-24 §4 item 7).
 
-`core/hooks/tests/compliance-check.sh ux-design` (from an installed or
+`core/hooks/tests/compliance-check.sh interaction-design` (from an installed or
 sibling-checked-out `core`) is the gate-house standard's own migration
 acceptance check — run clean against this rulebook's `hooks/` trees.

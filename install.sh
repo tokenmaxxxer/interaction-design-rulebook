@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# One-shot installer for the tokenmaxxxer ux-design-role stack.
-# Registers the tokenmaxxxer-ux-design marketplace and installs the
-# ux-design bundle (which pulls ux-design in as a dependency),
+# One-shot installer for the tokenmaxxxer interaction-design-role stack.
+# Registers the tokenmaxxxer-interaction-design marketplace and installs the
+# interaction-design bundle (which pulls interaction-design in as a dependency),
 # then refreshes the marketplace once.
 #
 # Installs for your account only (user scope). Uses a real `claude` CLI
@@ -14,15 +14,15 @@
 # repository or marketplace.
 set -euo pipefail
 
-MARKET="tokenmaxxxer-ux-design"
-BUNDLE="ux-design"
-GITHUB_REPO="tokenmaxxxer/ux-design-rulebook"
+MARKET="tokenmaxxxer-interaction-design"
+BUNDLE="interaction-design"
+GITHUB_REPO="tokenmaxxxer/interaction-design-rulebook"
 
 usage() {
   cat <<'USAGE'
 Usage: install.sh
 
-  Installs the tokenmaxxxer ux-design-role stack for your account only.
+  Installs the tokenmaxxxer interaction-design-role stack for your account only.
   Applies to every machine-local session but does not travel with any
   repo, and does not reach Claude Code on the web / Slack cloud sessions.
   -h, --help  Show this help.
@@ -136,12 +136,12 @@ if [ -n "$CLI" ] && [ -x "$CLI" ]; then
   "$CLI" plugin marketplace update "$MARKET" >/dev/null 2>&1 || true
 
   install_failed=""
-  for plugin in ux-design; do
+  for plugin in interaction-design; do
     "$CLI" plugin install "$plugin@$MARKET" --scope user || install_failed="$install_failed $plugin"
   done
   "$CLI" plugin install "$BUNDLE@$MARKET" --scope user || install_failed="$install_failed $BUNDLE"
 
-  for plugin in ux-design; do
+  for plugin in interaction-design; do
     "$CLI" plugin update "$plugin@$MARKET" || true
   done
   "$CLI" plugin update "$BUNDLE@$MARKET" || true
@@ -165,9 +165,9 @@ fi
 cat <<'MSG'
 ==> done (user scope). Start (or reload) a Claude Code session, then:
     - verify with /plugins
-    - RECOMMENDED: open /plugin -> marketplaces -> tokenmaxxxer-ux-design and enable
+    - RECOMMENDED: open /plugin -> marketplaces -> tokenmaxxxer-interaction-design and enable
       auto-update, so future stack additions arrive automatically. There is
       no CLI/config switch for this toggle; it is a one-time interactive step.
     - without auto-update, refresh manually anytime:
-      claude plugin update ux-design@tokenmaxxxer-ux-design
+      claude plugin update interaction-design@tokenmaxxxer-interaction-design
 MSG
