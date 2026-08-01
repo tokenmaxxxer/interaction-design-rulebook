@@ -6,8 +6,9 @@ two plugin sets installed: this marketplace's `ux-design` plugin, and the
 plugins (`core`, `terse`, `freelunch`, `scout`, `warrant`). Core owns the
 interaction protocol — issue in, two-phase PR out
 (research/survey/proposal → human review Approve → execution), branch
-`issue-<n>/ux-design`, record at `docs/issue-<n>/reports/ux-design.md` —
-and the role-agnostic review gates (trailer/record-fields/handbook-trigger),
+`issue-<n>/interaction-design`, record at
+`docs/issue-<n>/reports/interaction-design.md` — and the role-agnostic
+review gates (trailer/record-fields/handbook-trigger),
 fired globally by `core/hooks/hooks.json` for every plugin install. This
 rulebook owns only what is ux-design-specific: `directive.sh`'s four
 role-unique values.
@@ -49,6 +50,18 @@ registered as its own `.claude-plugin/marketplace.json` entry —
 See `docs/issue-21/proposals/issue-21-interaction-design-gate-machine.md`
 for the full plugin-composition design, and each plugin's own `README.md`
 for what it owns and how its gate is judged.
+
+As of issue-24, all eleven gates source core's shared gate-house library
+(`core/hooks/lib/gate-lib.sh` / `gate-lib.py`, core issue #72) by
+reference, never vendored — the canonical fail-closed EXIT trap
+(`gate_trap_fail_closed`), the fixed kill-switch convention
+(`gate_kill_switch_active`: only a recognized on-spelling disables, every
+other value including an unrecognized one stays active), malformed-JSON
+deny, absolute/`./`-prefixed path normalization
+(`gate_normalize_path`), and full `Edit`/`MultiEdit` reconstruction
+honoring each edit's own `replace_all`
+(`gate_reconstruct_write`). `docs/handbooks/gate-house-standard.md`'s own
+`core/hooks/tests/compliance-check.sh` is the closing acceptance check.
 
 ## What is here
 
@@ -102,7 +115,15 @@ why.
     claude plugin marketplace add tokenmaxxxer/ux-design-rulebook
     claude plugin install ux-design@tokenmaxxxer-ux-design
 
-Kill switch: `UX_DESIGN_CYCLE_OFF=1`.
+There is no repo-wide kill switch — each of the eleven `id-*` gates has
+its own, independent one: `ID_PROPOSAL_SHAPE_GATE_OFF`,
+`ID_CITATION_FORMAT_GATE_OFF`, `ID_PERSONA_GOAL_GATE_OFF`,
+`ID_TASK_FLOW_GATE_OFF`, `ID_STATE_COMPLETENESS_GATE_OFF`,
+`ID_WIREFRAME_STAGING_GATE_OFF`, `ID_NIELSEN_HEURISTICS_GATE_OFF`,
+`ID_ACCESSIBILITY_FLOOR_GATE_OFF`, `ID_USABILITY_TEST_PLAN_GATE_OFF`,
+`ID_TRACEABILITY_GATE_OFF`, `ID_STAGE_ORDER_GATE_OFF` — set any of them
+to `1`/`true`/`yes`/`on` to disable that one gate; every other value
+(including a typo) leaves it active. See each plugin's own `README.md`.
 
 This role's record terminal state is `reviewed`, not core's own default
 (`landed`). Core's `record-fields-gate.sh` (now the only copy, fired
@@ -122,7 +143,15 @@ has no `env` field, so this rulebook cannot set it from its own
     /bin/bash tests/stub-check.sh ux-design/hooks
     /bin/bash tests/stub-check.sh ux-design/plugins
 
-Each `ux-design/plugins/<name>/tests/<name>-gate-tests.sh` runs
-independently and is not aggregated into one suite — a broken plugin's
-tests fail attributably, not as one opaque failure (per the approved
-`docs/issue-21/proposals/issue-21-interaction-design-gate-machine.md` §6).
+Each `ux-design/plugins/<name>/tests/<name>-gate-tests.sh` also runs
+independently on its own — a broken plugin's tests still fail
+attributably, with its own output, not as one opaque failure (per the
+approved
+`docs/issue-21/proposals/issue-21-interaction-design-gate-machine.md`
+§6). `tests/run-gate-tests.sh` now also loops all eleven of them and
+exits non-zero if any fail, so a reviewer running only that one script
+gets an accurate combined signal (issue-24 §4 item 7).
+
+`core/hooks/tests/compliance-check.sh ux-design` (from an installed or
+sibling-checked-out `core`) is the gate-house standard's own migration
+acceptance check — run clean against this rulebook's `hooks/` trees.

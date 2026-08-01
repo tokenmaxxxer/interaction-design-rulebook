@@ -73,6 +73,106 @@ teardown
 
 rm -f "${TMPDIR:-/tmp}/wsg_out" "${TMPDIR:-/tmp}/wsg_err"
 
+# ---------------------------------------------------------------------------
+# mandatory: gate-lib.sh/gate-lib.py shared-contract cases (gate-house
+# standard from core issue #72). Self-contained block: its own counter, and
+# it exits 1 immediately on any failure of its own cases, leaving the
+# existing pass/fail-tracking above untouched.
+# ---------------------------------------------------------------------------
+m_fail=0
+m_check() {
+  local desc="$1" expect="$2" got="$3"
+  if [ "$got" -eq "$expect" ]; then
+    echo "ok — $desc"
+  else
+    echo "FAIL — $desc (expected exit $expect, got $got)" >&2
+    m_fail=1
+  fi
+}
+
+run_gate_raw() {
+  # $1 = raw stdin payload (may be malformed/empty)
+  printf '%s' "$1" | env CLAUDE_PROJECT_DIR="$TEST_REPO" bash "$GATE" >"${TMPDIR:-/tmp}/wsg_out" 2>"${TMPDIR:-/tmp}/wsg_err"
+  return $?
+}
+
+run_gate_tool_input() {
+  # $1 = tool name, $2 = JSON tool_input (already-encoded), extra env via caller
+  python3 -c '
+import json, sys
+print(json.dumps({"tool_name": sys.argv[1], "tool_input": json.loads(sys.argv[2])}))
+' "$1" "$2" | env CLAUDE_PROJECT_DIR="$TEST_REPO" bash "$GATE" >"${TMPDIR:-/tmp}/wsg_out" 2>"${TMPDIR:-/tmp}/wsg_err"
+  return $?
+}
+
+# 1) Edit with replace_all:true against a multiply-occurring old_string.
+setup
+target_1="docs/issue-200/reports/interaction-design.md"
+content_1=$'## Wireframe fidelity staging\n\n### Lo-fi stage\n\nDUPWORD structural boxes only. DUPWORD again.\n\n### Hi-fi stage\n\nFull visual treatment applied.\n'
+mkdir -p "$TEST_REPO/docs/issue-200/reports"
+printf '%s' "$content_1" > "$TEST_REPO/$target_1"
+edit_input_1="$(python3 -c '
+import json
+print(json.dumps({"file_path": "'"$target_1"'", "old_string": "DUPWORD", "new_string": "X", "replace_all": True}))
+')"
+run_gate_tool_input "Edit" "$edit_input_1"
+m_check "mandatory: Edit replace_all replaces every occurrence" 0 $?
+teardown
+[ "$m_fail" -ne 0 ] && { rm -f "${TMPDIR:-/tmp}/wsg_out" "${TMPDIR:-/tmp}/wsg_err"; exit 1; }
+
+# 2) MultiEdit with a mix of replace_all true/false edits in one call.
+setup
+target_2="docs/issue-201/reports/interaction-design.md"
+content_2=$'## Wireframe fidelity staging\n\n### Lo-fi stage\n\nDUPWORD structural boxes only. DUPWORD again.\n\n### Hi-fi stage\n\nFull visual treatment SINGLEWORD applied.\n'
+mkdir -p "$TEST_REPO/docs/issue-201/reports"
+printf '%s' "$content_2" > "$TEST_REPO/$target_2"
+multiedit_input_2="$(python3 -c '
+import json
+edits = [
+    {"old_string": "DUPWORD", "new_string": "X", "replace_all": True},
+    {"old_string": "SINGLEWORD", "new_string": "Y", "replace_all": False},
+]
+print(json.dumps({"file_path": "'"$target_2"'", "edits": edits}))
+')"
+run_gate_tool_input "MultiEdit" "$multiedit_input_2"
+m_check "mandatory: MultiEdit honors per-edit replace_all" 0 $?
+teardown
+[ "$m_fail" -ne 0 ] && { rm -f "${TMPDIR:-/tmp}/wsg_out" "${TMPDIR:-/tmp}/wsg_err"; exit 1; }
+
+# 3) Malformed JSON on stdin -> deny (exit 2).
+setup
+run_gate_raw '{"tool_name": "Write", "tool_input": {"file_path": "docs/issue-202/reports/interaction-design.md", "content": "trunc'
+m_check "mandatory: malformed JSON denies" 2 $?
+teardown
+[ "$m_fail" -ne 0 ] && { rm -f "${TMPDIR:-/tmp}/wsg_out" "${TMPDIR:-/tmp}/wsg_err"; exit 1; }
+
+# 3b) Empty stdin payload -> deny (exit 2).
+setup
+run_gate_raw ''
+m_check "mandatory: empty payload denies" 2 $?
+teardown
+[ "$m_fail" -ne 0 ] && { rm -f "${TMPDIR:-/tmp}/wsg_out" "${TMPDIR:-/tmp}/wsg_err"; exit 1; }
+
+# 4) Kill switch set to an unrecognized value -> stays active (still denies).
+setup
+target_4="docs/issue-203/reports/interaction-design.md"
+content_4=$'## Wireframe fidelity staging\n\n### Hi-fi stage\n\nFull visual treatment with tokens applied.\n\n### Lo-fi stage\n\nStructural boxes and labels only, no color.\n'
+ID_WIREFRAME_STAGING_GATE_OFF="banana" run_gate "$target_4" "$content_4"
+m_check "mandatory: kill switch unrecognized value stays active" 2 $?
+teardown
+[ "$m_fail" -ne 0 ] && { rm -f "${TMPDIR:-/tmp}/wsg_out" "${TMPDIR:-/tmp}/wsg_err"; exit 1; }
+
+# 5) Absolute file_path and "./"-prefixed variant both match the same scope.
+setup
+target_5="docs/issue-204/reports/interaction-design.md"
+content_5=$'## Wireframe fidelity staging\n\n### Lo-fi stage\n\nStructural boxes and labels only, no color.\n\n### Hi-fi stage\n\nFull visual treatment with tokens applied.\n'
+run_gate "$TEST_REPO/$target_5" "$content_5"
+m_check "mandatory: absolute file_path matches scope" 0 $?
+run_gate "./$target_5" "$content_5"
+m_check "mandatory: ./-prefixed file_path matches scope" 0 $?
+teardown
+[ "$m_fail" -ne 0 ] && { rm -f "${TMPDIR:-/tmp}/wsg_out" "${TMPDIR:-/tmp}/wsg_err"; exit 1; }
+
 if [ "$fail" -ne 0 ]; then
   echo "id-wireframe-staging-gate-tests: FAIL" >&2
   exit 1

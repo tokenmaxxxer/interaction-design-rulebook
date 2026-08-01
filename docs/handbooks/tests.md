@@ -9,8 +9,12 @@ Repo-level checks under `tests/`, never installed as plugin hooks.
   as subprocesses. As of issue-16, those gates no longer have a local
   copy — they are core canon, fired globally by
   `core/hooks/hooks.json` for every plugin install, and tested there, not
-  per rulebook. This file now exits 0 with an explanatory message rather
-  than pointing at deleted files.
+  per rulebook — that part still exits with an explanatory no-op message.
+  As of issue-24, this file also loops every
+  `ux-design/plugins/*/tests/*-gate-tests.sh` suite, running each (still
+  surfacing its own output for attribution, per issue-21 §6) and exiting
+  non-zero if any fail, so a reviewer running only this one script gets
+  an accurate combined signal for the eleven `id-*` plugin gates.
 - `deny-only-check.sh` — greps for a hook emitting `permissionDecision:
   allow` (gates may only pass through or refuse) and probes that any
   `*-gate.sh` still under `ux-design/hooks/` refuses an empty record.

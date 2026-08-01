@@ -120,4 +120,75 @@ else
 fi
 rm -rf "$td_f"
 
+mrc=0
+
+# --- mandatory: malformed JSON denies ---------------------------------------
+td_m1="$(mk_tmp)"
+out_m1="$(printf '%s' '{"tool_name":"Write"' | env CLAUDE_PROJECT_DIR="$td_m1" /bin/bash "$gate" 2>&1)"
+code_m1=$?
+if [ "$code_m1" = 2 ]; then
+  echo "id-stage-order-gate-tests: ok — mandatory: malformed JSON denies"
+else
+  echo "id-stage-order-gate-tests: FAIL — mandatory: malformed JSON denies: expected exit 2, got exit $code_m1: $out_m1" >&2
+  mrc=1
+fi
+rm -rf "$td_m1"
+
+# --- mandatory: empty payload denies ----------------------------------------
+td_m2="$(mk_tmp)"
+out_m2="$(printf '' | env CLAUDE_PROJECT_DIR="$td_m2" /bin/bash "$gate" 2>&1)"
+code_m2=$?
+if [ "$code_m2" = 2 ]; then
+  echo "id-stage-order-gate-tests: ok — mandatory: empty payload denies"
+else
+  echo "id-stage-order-gate-tests: FAIL — mandatory: empty payload denies: expected exit 2, got exit $code_m2: $out_m2" >&2
+  mrc=1
+fi
+rm -rf "$td_m2"
+
+# --- mandatory: kill switch unrecognized value stays active ----------------
+td_m3="$(mk_tmp)"
+out_m3="$(payload="$(python3 -c '
+import json,sys
+print(json.dumps({"tool_name":"Write","tool_input":{"file_path":sys.argv[1],"content":sys.argv[2]},"cwd":sys.argv[3]}))
+' "docs/issue-999/proposals/x.md" "# Proposal" "$td_m3")"; printf '%s' "$payload" | env CLAUDE_PROJECT_DIR="$td_m3" ID_STAGE_ORDER_GATE_OFF="banana" /bin/bash "$gate" 2>&1)"
+code_m3=$?
+if [ "$code_m3" = 2 ]; then
+  echo "id-stage-order-gate-tests: ok — mandatory: kill switch unrecognized value stays active"
+else
+  echo "id-stage-order-gate-tests: FAIL — mandatory: kill switch unrecognized value stays active: expected exit 2, got exit $code_m3: $out_m3" >&2
+  mrc=1
+fi
+rm -rf "$td_m3"
+
+# --- mandatory: absolute file_path matches scope ----------------------------
+td_m4="$(mk_tmp)"
+printf '# Proposal\n' > "$td_m4/docs/issue-999/proposals/p.md"
+out_m4="$(run_gate "$td_m4" "$td_m4/docs/issue-999/reports/interaction-design.md" "# Record" 2>&1)"
+code_m4=$?
+if [ "$code_m4" = 0 ]; then
+  echo "id-stage-order-gate-tests: ok — mandatory: absolute file_path matches scope"
+else
+  echo "id-stage-order-gate-tests: FAIL — mandatory: absolute file_path matches scope: expected exit 0, got exit $code_m4: $out_m4" >&2
+  mrc=1
+fi
+rm -rf "$td_m4"
+
+# --- mandatory: ./-prefixed file_path matches scope -------------------------
+td_m5="$(mk_tmp)"
+printf '# Proposal\n' > "$td_m5/docs/issue-999/proposals/p.md"
+out_m5="$(run_gate "$td_m5" "./docs/issue-999/reports/interaction-design.md" "# Record" 2>&1)"
+code_m5=$?
+if [ "$code_m5" = 0 ]; then
+  echo "id-stage-order-gate-tests: ok — mandatory: ./-prefixed file_path matches scope"
+else
+  echo "id-stage-order-gate-tests: FAIL — mandatory: ./-prefixed file_path matches scope: expected exit 0, got exit $code_m5: $out_m5" >&2
+  mrc=1
+fi
+rm -rf "$td_m5"
+
+if [ "$mrc" != 0 ]; then
+  exit 1
+fi
+
 exit "$rc"
