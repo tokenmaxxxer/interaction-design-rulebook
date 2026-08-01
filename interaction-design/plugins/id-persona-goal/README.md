@@ -28,7 +28,7 @@ table.
   USE_WHEN / PRODUCES / HAND-OFF for the persona/goal judgment, sourced
   via the shared core `role-directive.sh` library
   (`${CLAUDE_PLUGIN_ROOT_CORE}/hooks/lib/role-directive.sh`, same
-  convention as the umbrella `ux-design/hooks/directive.sh`).
+  convention as the umbrella `interaction-design/hooks/directive.sh`).
 - `hooks/persona-goal-gate.sh` — PreToolUse gate on `Write|Edit|MultiEdit`,
   narrowed to this plugin's one concern:
   - heading check: a heading matching

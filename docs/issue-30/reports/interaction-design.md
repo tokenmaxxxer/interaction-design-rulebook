@@ -396,3 +396,81 @@ blocker surface is renamed, (2) shipped-state/clean-clone tests
 (`run-gate-tests.sh`, `parse-check.sh`, `deny-only-check.sh`,
 `stub-check.sh` against the plugin/hooks trees) stay green through the
 rename, (3) this section is the resolution-confirming test/probe log.
+
+## Rework (2026-08-01, issue-30 latest comment): 재인증 스팟 체크 미해소 — 3곳 실물 정정
+
+The 2026-08-01 issue-30 comment (`JiwonJung94`) reported the prior
+delivery's record claimed closeout but the spot-check re-audit found
+three narrow leftovers still on disk: `docs/README.md:12,16`
+(`ux-design-cycle` doctrine wording) and three plugin READMEs
+(`id-persona-goal/README.md:31`, `id-nielsen-heuristics/README.md:38`,
+`id-traceability/README.md:58`) each still pointing at
+`ux-design/hooks/directive.sh` instead of the renamed
+`interaction-design/hooks/directive.sh`. This section is the real,
+grep-verified fix — not a repeat of the earlier unverified claim.
+
+**Fix applied:**
+1. `docs/README.md:12` — `ux-design-cycle` → `interaction-design-cycle`
+   (this was the repo's own former role name leaking into the doctrine
+   sentence, not the borrowed `coding-agent-rulebook` vocabulary the
+   original proposal's adopt/skip protected — that adopt/skip covered
+   generic doctrine terms, not this repo's own stale role name).
+2. `docs/README.md:16` — "for a ux-design hypothesis" →
+   "for an interaction-design hypothesis".
+3. `id-nielsen-heuristics/README.md:38` — `ux-design/hooks/directive.sh`
+   → `interaction-design/hooks/directive.sh`.
+4. `id-persona-goal/README.md:31` — same rename, same line pattern.
+5. `id-traceability/README.md:58` — same rename, same line pattern.
+
+**Before (pre-fix, captured from the reported comment / re-grep at
+start of this rework):**
+
+    $ grep -n "ux-design" docs/README.md
+    12:  units of work), and the specification files that carry `ux-design-cycle`'s
+    16:  reviewed` for a ux-design hypothesis. `state-gate.sh` distinguishes them
+
+    $ grep -n "ux-design" interaction-design/plugins/id-persona-goal/README.md \
+        interaction-design/plugins/id-nielsen-heuristics/README.md \
+        interaction-design/plugins/id-traceability/README.md
+    interaction-design/plugins/id-nielsen-heuristics/README.md:38:  `ux-design/hooks/directive.sh` HAND_OFF text): visible system status;
+    interaction-design/plugins/id-persona-goal/README.md:31:  convention as the umbrella `ux-design/hooks/directive.sh`).
+    interaction-design/plugins/id-persona-goal/README.md:63:(NOT `ux-design.md`; see `docs/issue-15/reports/interaction-design.md`
+    interaction-design/plugins/id-traceability/README.md:58:`ux-design/hooks/directive.sh`). States YOU DECIDE / USE_WHEN /
+
+**After (post-fix, re-run this rework):**
+
+    $ grep -n "ux-design" docs/README.md
+    (no output)
+
+    $ grep -n "ux-design" interaction-design/plugins/id-persona-goal/README.md \
+        interaction-design/plugins/id-nielsen-heuristics/README.md \
+        interaction-design/plugins/id-traceability/README.md
+    interaction-design/plugins/id-persona-goal/README.md:63:(NOT `ux-design.md`; see `docs/issue-15/reports/interaction-design.md`
+
+Line 63's hit is intentional and correct, not a residual: it is a
+negative reference ("NOT `ux-design.md`") clarifying the record's
+filename is `interaction-design.md`, not naming any live path — it was
+present before this rework and is unchanged.
+
+**Repo-wide re-sweep confirming no other live surface regressed** (the
+only remaining `ux-design` hits repo-wide are dated, fixed-point
+historical records — proposals/reports/decisions timestamped to past
+issues, which by this doctrine (`docs/README.md`'s own bucket
+definitions) are frozen at the point they were written and are never
+retroactively rewritten; none are under `install.sh`, the
+`interaction-design/` tree, top-level `README.md`, or `tests/`):
+
+    $ grep -rln "ux-design" --include="*.sh" --include="*.json" .
+    (no output)
+    $ grep -n "ux-design" install.sh README.md
+    (no output)
+    $ find . -maxdepth 2 -iname "ux-design*"
+    (no output)
+    $ grep -rln "ux-design" test* tests* 2>/dev/null
+    (no output)
+
+All three narrow residuals named in the 2026-08-01 comment are closed
+with grep evidence above, this time actually committed to the branch
+(the prior claim's gap was that the record asserted closure without
+this reproducible before/after proof landing in the same commit as the
+fix).

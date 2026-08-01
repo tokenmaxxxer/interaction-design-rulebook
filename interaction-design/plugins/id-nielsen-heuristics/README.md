@@ -35,7 +35,7 @@ no agent.
   PRODUCES / HAND-OFF for the Nielsen-heuristics check, sourced from the
   shared `core/hooks/lib/role-directive.sh` convention. Names all ten
   heuristics in PRODUCES (copied verbatim from the umbrella
-  `ux-design/hooks/directive.sh` HAND_OFF text): visible system status;
+  `interaction-design/hooks/directive.sh` HAND_OFF text): visible system status;
   match between system and the real world; user control and undo;
   consistency and standards; error prevention; recognition rather than
   recall; flexibility and efficiency of use; aesthetic and minimalist
