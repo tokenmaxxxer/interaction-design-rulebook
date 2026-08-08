@@ -162,11 +162,15 @@ try:
             "scope-growth flag field." % rel
         )
 
+    FEEDBACK_FIELD_RE = re.compile(r'\bfeedback\s*:', re.I)
+
     missing = []
     if not SPEC_ONLY_RE.search(body):
         missing.append("no explicit spec-only boundary statement (expected wording matching /\\bspec[\\s-]only\\b/i)")
     if not SCOPE_GROWTH_FIELD_RE.search(body):
         missing.append("no scope-growth flag field present (a line/bullet with the field key \"scope growth\" or \"scope-growth\", even if its value is \"none\")")
+    if not FEEDBACK_FIELD_RE.search(body):
+        missing.append("no feedback: field present (what the system tells the user for at least one traced element)")
 
     if missing:
         deny(

@@ -229,6 +229,17 @@ try:
             "(polish) treatment." % rel
         )
 
+    # Spec required field (issue-34, interaction-design.spec.json): the
+    # wireframe section must carry a screen_ref: field tying each wireframe
+    # entry to a state_name.
+    SCREEN_REF_RE = re.compile(r'\bscreen_ref\s*:', re.I)
+    section_text = "\n".join(section_lines)
+    if not SCREEN_REF_RE.search(section_text):
+        deny(
+            "%s's wireframe/fidelity section has no screen_ref: field. Each wireframe "
+            "entry must carry a screen_ref: pointer tying it to a state_name." % rel
+        )
+
     # Passing — best-effort update of the shared per-subject status file.
     try:
         status_path = os.path.join(root, "docs", "issue-%s" % issue_n, "reports", "interaction-design", ".status.json")

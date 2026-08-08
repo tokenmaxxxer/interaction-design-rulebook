@@ -69,6 +69,21 @@ run_case "all four states named -> allow" \
 - empty: n/a
 - error: inline validation message
 - loading: spinner on submit
+- state_name: login
+- node_type: state
+- transitions: dashboard
+- edge_case_variant: network-timeout
+
+### Dashboard
+
+- default: shows widgets
+- empty: no widgets yet
+- error: load failure banner
+- loading: skeleton screens
+- state_name: dashboard
+- node_type: terminal
+- transitions: none
+- edge_case_variant: none
 ' 0
 
 # (b) states heading missing "error" -> deny naming it
@@ -80,6 +95,70 @@ run_case "missing error -> deny" \
 - default: shows the form
 - empty: n/a
 - loading: spinner on submit
+- state_name: login
+- node_type: terminal
+- transitions: none
+- edge_case_variant: none
+' 2
+
+# (b2) states heading missing spec fields (state_name/node_type/transitions/edge_case_variant) -> deny
+run_case "missing spec fields -> deny" \
+'## States
+
+### Login screen
+
+- default: shows the form
+- empty: n/a
+- error: inline validation message
+- loading: spinner on submit
+' 2
+
+# (b3) node_type not in {state, choice, terminal} -> deny
+run_case "invalid node_type -> deny" \
+'## States
+
+### Login screen
+
+- default: shows the form
+- empty: n/a
+- error: inline validation message
+- loading: spinner on submit
+- state_name: login
+- node_type: bogus
+- transitions: none
+- edge_case_variant: none
+' 2
+
+# (b4) transitions references a state_name not defined anywhere -> deny
+run_case "unresolvable transitions reference -> deny" \
+'## States
+
+### Login screen
+
+- default: shows the form
+- empty: n/a
+- error: inline validation message
+- loading: spinner on submit
+- state_name: login
+- node_type: state
+- transitions: nonexistent-screen
+- edge_case_variant: none
+' 2
+
+# (b5) no terminal node_type anywhere -> deny
+run_case "no terminal node -> deny" \
+'## States
+
+### Login screen
+
+- default: shows the form
+- empty: n/a
+- error: inline validation message
+- loading: spinner on submit
+- state_name: login
+- node_type: state
+- transitions: none
+- edge_case_variant: none
 ' 2
 
 # (c) heading present, blank body -> deny (stub)
@@ -125,6 +204,10 @@ mcheck() {
 - empty: n/a ZZZ
 - error: inline validation message ZZZ
 - loading: spinner on submit
+- state_name: login
+- node_type: terminal
+- transitions: none
+- edge_case_variant: none
 EOF
   payload="$(python3 - <<'PY'
 import json
@@ -161,6 +244,10 @@ PY
 - empty: n/a ZZZ
 - error: inline validation message ZZZ
 - loading: spinner on submit
+- state_name: login
+- node_type: terminal
+- transitions: none
+- edge_case_variant: none
 EOF
   payload="$(python3 - <<'PY'
 import json
@@ -242,6 +329,10 @@ content = """## States
 - empty: n/a
 - error: inline validation message
 - loading: spinner on submit
+- state_name: login
+- node_type: terminal
+- transitions: none
+- edge_case_variant: none
 """
 print(json.dumps({"tool_name": "Write", "tool_input": {"file_path": td + "/docs/issue-42/reports/interaction-design.md", "content": content}}))
 PY
@@ -267,6 +358,10 @@ content = """## States
 - empty: n/a
 - error: inline validation message
 - loading: spinner on submit
+- state_name: login
+- node_type: terminal
+- transitions: none
+- edge_case_variant: none
 """
 print(json.dumps({"tool_name": "Write", "tool_input": {"file_path": "./docs/issue-42/reports/interaction-design.md", "content": content}}))
 PY
