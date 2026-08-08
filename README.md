@@ -103,14 +103,29 @@ interaction-design) — the role definition above is the authoritative one.
 
 ## Record vocabulary
 
-`loop_state`: `idle, drafting, reviewed` (terminal: `reviewed`). The
-record carries a non-empty pointer to the governing
-`hypothesis`/`product-record` and the screen/flow/wireframe specs or
-pointers to them, a non-empty pointer to the goal/persona reference
-used, the methodology/heuristic-set actually applied (named), and
-confirmation that all nine mandatory phase-2 components are present in
-the delivered spec — or an explicit note of which are inapplicable and
-why.
+`loop_state`: `sketching, reviewed, spec-not-confirmed,
+screen-ref-unresolvable` (terminal: `reviewed`) — this is the realized
+`interaction-design.spec.json`'s (marketplace #521-#525 program, issue-34)
+loop_state vocabulary, layered onto this role's phase-2 record as of
+issue-34, superseding the earlier `idle, drafting, reviewed` set:
+`sketching` names the in-progress phase-2 state (before the record
+reaches `reviewed`), `spec-not-confirmed` is a refusal state (the record
+is not yet governed-record-traced — see `id-traceability`),
+`screen-ref-unresolvable` is an error state (a `screen_ref` or
+`transitions` entry that fails the `id-wireframe-staging` /
+`id-state-completeness` reference-resolution checks), and `reviewed`
+remains this role's unchanged terminal state. The record also carries a
+non-empty pointer to the governing `hypothesis`/`product-record` and the
+screen/flow/wireframe specs or pointers to them, a non-empty pointer to
+the goal/persona reference used, the methodology/heuristic-set actually
+applied (named), and confirmation that all nine mandatory phase-2
+components are present in the delivered spec — or an explicit note of
+which are inapplicable and why. As of issue-34, the phase-2 spec also
+requires, per screen/flow entry: `state_name`, `node_type` (one of
+`state`, `choice`, `terminal`), `transitions`, `edge_case_variant`
+(`id-state-completeness`); `entry_trigger` (`id-task-flow`); `screen_ref`
+(`id-wireframe-staging`); and `feedback` (`id-traceability`) — see each
+plugin's own `README.md` for its exact check.
 
 ## Install
 

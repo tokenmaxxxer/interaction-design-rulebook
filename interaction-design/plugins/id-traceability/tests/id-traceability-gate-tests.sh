@@ -41,9 +41,20 @@ content_a='# Traceability and scope growth
 This deliverable is spec-only: output is specification, never src/ code.
 
 - Scope growth: none
+- Feedback: inline validation message on submit failure
 '
 got="$(run_gate "$REC" "$(json_str "$content_a")")"
 check "a: full record allows" 0 "$got"
+
+# (a2) spec-only + scope-growth present, feedback missing -> deny
+content_a2='# Traceability and scope growth
+
+This deliverable is spec-only: output is specification, never src/ code.
+
+- Scope growth: none
+'
+got="$(run_gate "$REC" "$(json_str "$content_a2")")"
+check "a2: missing feedback field denies" 2 "$got"
 
 # (b) spec-only present, scope-growth field missing -> deny
 content_b='# Traceability
@@ -108,6 +119,7 @@ content_edit_base='# Traceability and scope growth
 This deliverable is spec-only: output is specification, never src/ code.
 BENIGN_MARKER here.
 - Scope growth: none
+- Feedback: inline validation message
 BENIGN_MARKER again.
 '
 printf '%s' "$content_edit_base" > "$mtd/docs/issue-999/reports/interaction-design.md"
@@ -135,6 +147,7 @@ content_me_base='# Traceability and scope growth
 This deliverable is spec-only: output is specification, never src/ code.
 DUPE_TOKEN one. DUPE_TOKEN two. DUPE_TOKEN three.
 - Scope growth: SINGLE_TOKEN
+- Feedback: inline validation message
 '
 printf '%s' "$content_me_base" > "$mtd/docs/issue-999/reports/interaction-design.md"
 multiedit_payload=$(python3 -c '

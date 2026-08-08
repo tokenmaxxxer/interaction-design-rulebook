@@ -39,9 +39,16 @@ check() {
 
 # (a) lo-fi then hi-fi, both non-blank -> allow (exit 0)
 setup
-content_a=$'## Wireframe fidelity staging\n\n### Lo-fi stage\n\nStructural boxes and labels only, no color.\n\n### Hi-fi stage\n\nFull visual treatment with tokens applied.\n'
+content_a=$'## Wireframe fidelity staging\n\n### Lo-fi stage\n\nscreen_ref: login\n\nStructural boxes and labels only, no color.\n\n### Hi-fi stage\n\nFull visual treatment with tokens applied.\n'
 run_gate "docs/issue-100/reports/interaction-design.md" "$content_a"
 check "lo-fi before hi-fi, both non-blank -> allow" 0 $?
+teardown
+
+# (a2) lo-fi/hi-fi present but no screen_ref: field -> deny
+setup
+content_a2=$'## Wireframe fidelity staging\n\n### Lo-fi stage\n\nStructural boxes and labels only, no color.\n\n### Hi-fi stage\n\nFull visual treatment with tokens applied.\n'
+run_gate "docs/issue-105/reports/interaction-design.md" "$content_a2"
+check "missing screen_ref -> deny" 2 $?
 teardown
 
 # (b) hi-fi before lo-fi -> deny
@@ -108,7 +115,7 @@ print(json.dumps({"tool_name": sys.argv[1], "tool_input": json.loads(sys.argv[2]
 # 1) Edit with replace_all:true against a multiply-occurring old_string.
 setup
 target_1="docs/issue-200/reports/interaction-design.md"
-content_1=$'## Wireframe fidelity staging\n\n### Lo-fi stage\n\nDUPWORD structural boxes only. DUPWORD again.\n\n### Hi-fi stage\n\nFull visual treatment applied.\n'
+content_1=$'## Wireframe fidelity staging\n\n### Lo-fi stage\n\nscreen_ref: login\n\nDUPWORD structural boxes only. DUPWORD again.\n\n### Hi-fi stage\n\nFull visual treatment applied.\n'
 mkdir -p "$TEST_REPO/docs/issue-200/reports"
 printf '%s' "$content_1" > "$TEST_REPO/$target_1"
 edit_input_1="$(python3 -c '
@@ -123,7 +130,7 @@ teardown
 # 2) MultiEdit with a mix of replace_all true/false edits in one call.
 setup
 target_2="docs/issue-201/reports/interaction-design.md"
-content_2=$'## Wireframe fidelity staging\n\n### Lo-fi stage\n\nDUPWORD structural boxes only. DUPWORD again.\n\n### Hi-fi stage\n\nFull visual treatment SINGLEWORD applied.\n'
+content_2=$'## Wireframe fidelity staging\n\n### Lo-fi stage\n\nscreen_ref: login\n\nDUPWORD structural boxes only. DUPWORD again.\n\n### Hi-fi stage\n\nFull visual treatment SINGLEWORD applied.\n'
 mkdir -p "$TEST_REPO/docs/issue-201/reports"
 printf '%s' "$content_2" > "$TEST_REPO/$target_2"
 multiedit_input_2="$(python3 -c '
@@ -165,7 +172,7 @@ teardown
 # 5) Absolute file_path and "./"-prefixed variant both match the same scope.
 setup
 target_5="docs/issue-204/reports/interaction-design.md"
-content_5=$'## Wireframe fidelity staging\n\n### Lo-fi stage\n\nStructural boxes and labels only, no color.\n\n### Hi-fi stage\n\nFull visual treatment with tokens applied.\n'
+content_5=$'## Wireframe fidelity staging\n\n### Lo-fi stage\n\nscreen_ref: login\n\nStructural boxes and labels only, no color.\n\n### Hi-fi stage\n\nFull visual treatment with tokens applied.\n'
 run_gate "$TEST_REPO/$target_5" "$content_5"
 m_check "mandatory: absolute file_path matches scope" 0 $?
 run_gate "./$target_5" "$content_5"

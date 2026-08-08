@@ -47,7 +47,7 @@ json_str() {
 
 # (a) distinct task-flow heading with real content, separate from wireframe
 # heading -> allow.
-content_a=$'# Interaction Design Record\n\n## Task Flow\n\n1. User opens dashboard.\n2. User selects an item.\n3. Error state: retry banner shown.\n\n## Wireframe\n\nLow-fi structural layout goes here.\n'
+content_a=$'# Interaction Design Record\n\n## Task Flow\n\nentry_trigger: user clicks "Dashboard" nav item\n\n1. User opens dashboard.\n2. User selects an item.\n3. Error state: retry banner shown.\n\n## Wireframe\n\nLow-fi structural layout goes here.\n'
 p="$(json_str "docs/issue-999/reports/interaction-design.md")"
 c="$(json_str "$content_a")"
 got="$(_run "$(payload_write "$p" "$c")")"
@@ -71,6 +71,12 @@ p2="$(json_str "docs/issue-999/proposals/interaction-design.md")"
 c="$(json_str "$content_d")"
 got="$(_run "$(payload_write "$p2" "$c")")"
 _check "write to unrelated path -> allow" 0 "$got"
+
+# (e) task-flow heading with content but no entry_trigger: field -> deny.
+content_e0=$'# Interaction Design Record\n\n## Task Flow\n\n1. User opens dashboard.\n2. User selects an item.\n\n## Wireframe\n\nLow-fi structural layout goes here.\n'
+c="$(json_str "$content_e0")"
+got="$(_run "$(payload_write "$p" "$c")")"
+_check "task-flow content missing entry_trigger -> deny" 2 "$got"
 
 # --- mandatory: gate-lib migration behavior cases -------------------------
 m_rc=0
@@ -97,7 +103,7 @@ _m_check() {
 }
 
 # mandatory 1: Edit replace_all:true replaces every occurrence.
-content_e=$'# Interaction Design Record\n\n## Task Flow\n\n1. STEP-MARKER: User opens dashboard.\n2. STEP-MARKER: User selects an item.\n3. STEP-MARKER: Error state retry banner shown.\n\n## Wireframe\n\nLow-fi structural layout goes here.\n'
+content_e=$'# Interaction Design Record\n\n## Task Flow\n\nentry_trigger: STEP-MARKER user clicks nav\n\n1. STEP-MARKER: User opens dashboard.\n2. STEP-MARKER: User selects an item.\n3. STEP-MARKER: Error state retry banner shown.\n\n## Wireframe\n\nLow-fi structural layout goes here.\n'
 p_e="docs/issue-997/reports/interaction-design.md"
 mkdir -p "$root/docs/issue-997/reports"
 printf '%s' "$content_e" >"$root/$p_e"
@@ -109,7 +115,7 @@ got="$(_run "$edit_payload")"
 _m_check "mandatory: Edit replace_all replaces every occurrence" 0 "$got"
 
 # mandatory 2: MultiEdit honors per-edit replace_all (mix of true/false).
-content_f=$'# Interaction Design Record\n\n## Task Flow\n\n1. MARK step one. MARK step two. MARK step three.\n2. UNIQUE special step.\n\n## Wireframe\n\nLayout.\n'
+content_f=$'# Interaction Design Record\n\n## Task Flow\n\nentry_trigger: MARK user starts\n\n1. MARK step one. MARK step two. MARK step three.\n2. UNIQUE special step.\n\n## Wireframe\n\nLayout.\n'
 p_f="docs/issue-996/reports/interaction-design.md"
 mkdir -p "$root/docs/issue-996/reports"
 printf '%s' "$content_f" >"$root/$p_f"

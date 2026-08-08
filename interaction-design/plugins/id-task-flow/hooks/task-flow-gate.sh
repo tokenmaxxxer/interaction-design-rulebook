@@ -194,6 +194,38 @@ try:
             "this repo's stub-section convention." % rel
         )
 
+    # Spec required field (issue-34, interaction-design.spec.json): each
+    # flow entry (sub-heading or bold-labeled sub-item) must carry an
+    # entry_trigger: field naming what starts the flow.
+    ENTRY_RE = re.compile(
+        r'^(?:(#{%d,})\s+(.*)|[ \t]*[-*]?\s*\*\*([^*\n]+)\*\*.*)$' % (level + 1),
+        re.M,
+    )
+    entries = list(ENTRY_RE.finditer(body))
+    ENTRY_TRIGGER_RE = re.compile(r'\bentry_trigger\s*:', re.I)
+    if entries:
+        problems = []
+        for i, em in enumerate(entries):
+            ename = (em.group(2) or em.group(3) or "").strip() or "(unnamed entry)"
+            start = em.end()
+            end = entries[i + 1].start() if i + 1 < len(entries) else len(body)
+            block = body[start:end]
+            if not ENTRY_TRIGGER_RE.search(block):
+                problems.append(repr(ename))
+        if problems:
+            deny(
+                "the task/interaction-flow section in %s is missing entry_trigger: for "
+                "%d entr%s — %s. Every flow entry must name what starts it via an "
+                "entry_trigger: field." % (
+                    rel, len(problems), "y" if len(problems) == 1 else "ies", ", ".join(problems),
+                )
+            )
+    elif not ENTRY_TRIGGER_RE.search(body):
+        deny(
+            "the task/interaction-flow section in %s has no entry_trigger: field. Name "
+            "what starts the flow via an entry_trigger: field." % rel
+        )
+
     # Passing — best-effort update of the shared state file.
     try:
         state_path = os.path.join(root, "docs", "issue-%s" % issue_n, "reports", "interaction-design", ".status.json")

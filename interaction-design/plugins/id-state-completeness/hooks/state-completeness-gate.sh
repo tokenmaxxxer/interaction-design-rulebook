@@ -166,10 +166,22 @@ try:
         )
 
     REQUIRED = ["default", "empty", "error", "loading"]
+    # Spec required-field labels (issue-34, interaction-design.spec.json):
+    # each screen/flow entry must also carry these as explicit "label:" fields,
+    # on top of (never instead of) the four state words above.
+    SPEC_FIELDS = ["state_name", "node_type", "transitions", "edge_case_variant"]
+    VALID_NODE_TYPES = {"state", "choice", "terminal"}
 
     def missing_words(text):
         low = text.lower()
         return [w for w in REQUIRED if not re.search(r'\b%s\b' % re.escape(w), low)]
+
+    def missing_spec_fields(text):
+        return [f for f in SPEC_FIELDS if not re.search(r'\b%s\s*:' % re.escape(f), text, re.I)]
+
+    FIELD_VALUE_RE = {
+        f: re.compile(r'\b%s\s*:\s*([^\n]*)' % re.escape(f), re.I) for f in SPEC_FIELDS
+    }
 
     # Screen/flow entries: sub-headings deeper than the states heading, or
     # bold-labeled sub-items (e.g. "- **Login screen**", "**Checkout flow**").
@@ -192,6 +204,10 @@ try:
         sys.exit(0)
 
     problems = []
+    field_problems = []
+    all_state_names = set()
+    entry_node_types = []
+    entry_transitions = []  # list of (name, [referenced names])
     for i, em in enumerate(entries):
         name = (em.group(2) or em.group(3) or "").strip() or "(unnamed entry)"
         start = em.end()
@@ -201,6 +217,28 @@ try:
         if miss:
             problems.append("%r missing state(s): %s" % (name, ", ".join(miss)))
 
+        fmiss = missing_spec_fields(block)
+        if fmiss:
+            field_problems.append("%r missing field(s): %s" % (name, ", ".join(fmiss)))
+            continue  # can't validate values of fields that aren't present
+
+        sn_m = FIELD_VALUE_RE["state_name"].search(block)
+        if sn_m and sn_m.group(1).strip():
+            all_state_names.add(sn_m.group(1).strip())
+
+        nt_m = FIELD_VALUE_RE["node_type"].search(block)
+        nt_val = nt_m.group(1).strip().lower() if nt_m else ""
+        entry_node_types.append((name, nt_val))
+        if nt_val and nt_val not in VALID_NODE_TYPES:
+            field_problems.append(
+                "%r has node_type %r not in {state, choice, terminal}" % (name, nt_val)
+            )
+
+        tr_m = FIELD_VALUE_RE["transitions"].search(block)
+        tr_val = tr_m.group(1).strip() if tr_m else ""
+        refs = [t.strip() for t in re.split(r'[,\n]', tr_val) if t.strip() and t.strip().lower() not in ("none", "n/a", "-")]
+        entry_transitions.append((name, refs))
+
     if problems:
         deny(
             "the states section in %s is incomplete for %d screen/flow entr%s — %s. "
@@ -209,6 +247,37 @@ try:
                 rel, len(problems), "y" if len(problems) == 1 else "ies",
                 "; ".join(problems),
             )
+        )
+
+    if field_problems:
+        deny(
+            "the states section in %s is missing spec-required field(s) — %s. Every "
+            "screen/flow entry must carry state_name:, node_type: (one of state, "
+            "choice, terminal), transitions:, and edge_case_variant: labels." % (
+                rel, "; ".join(field_problems),
+            )
+        )
+
+    # reference_resolution: every transitions entry must resolve to a
+    # state_name defined somewhere in this record's states section.
+    unresolved = []
+    for name, refs in entry_transitions:
+        for ref in refs:
+            if ref not in all_state_names:
+                unresolved.append("%r -> %r" % (name, ref))
+    if unresolved:
+        deny(
+            "the states section in %s has unresolvable transitions reference(s): %s. "
+            "Every transitions entry must name a state_name defined elsewhere in this "
+            "record (loop_state: screen-ref-unresolvable otherwise)." % (
+                rel, "; ".join(unresolved),
+            )
+        )
+
+    if entries and not any(nt == "terminal" for _n, nt in entry_node_types):
+        deny(
+            "the states section in %s names no node_type: terminal entry — the spec "
+            "requires at least one terminal node per flow." % rel
         )
 
     # Passing — best-effort update of the shared status file.
