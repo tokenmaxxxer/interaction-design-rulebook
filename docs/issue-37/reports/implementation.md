@@ -1,9 +1,23 @@
 ---
-code_under_review: pending-commit
+code_under_review:
+  - tests/lib/resolve-core.sh
+  - tests/run-gate-tests.sh
+  - interaction-design/plugins/id-accessibility-floor/tests/id-accessibility-floor-gate-tests.sh
+  - interaction-design/plugins/id-citation-format/tests/id-citation-format-gate-tests.sh
+  - interaction-design/plugins/id-nielsen-heuristics/tests/id-nielsen-heuristics-gate-tests.sh
+  - interaction-design/plugins/id-persona-goal/tests/id-persona-goal-gate-tests.sh
+  - interaction-design/plugins/id-proposal-shape/tests/id-proposal-shape-gate-tests.sh
+  - interaction-design/plugins/id-stage-order/tests/id-stage-order-gate-tests.sh
+  - interaction-design/plugins/id-state-completeness/tests/id-state-completeness-gate-tests.sh
+  - interaction-design/plugins/id-task-flow/tests/id-task-flow-gate-tests.sh
+  - interaction-design/plugins/id-traceability/tests/id-traceability-gate-tests.sh
+  - interaction-design/plugins/id-usability-test-plan/tests/id-usability-test-plan-gate-tests.sh
+  - interaction-design/plugins/id-wireframe-staging/tests/id-wireframe-staging-gate-tests.sh
+  - docs/handbooks/tests.md
 type: test-infra
 breaking: false
 verdict: pass
-loop_state: committing
+loop_state: landed
 ---
 
 # issue-37 implementation record
