@@ -90,8 +90,33 @@ None.
 - Out-of-scope scripts (deny-only-check.sh, stub-check.sh, parse-check.sh)
   unaffected. code_under_review: pending-commit
 
+## Phase-2 continuation verification (this session, once)
+Re-ran every script under `tests/`, `*/tests/`, `*/hooks/tests/` with
+`CLAUDE_PLUGIN_ROOT_CORE` unset (no `*/hooks/tests/` dirs exist in this
+repo):
+- `tests/lib/resolve-core.sh`-sourcing suites (all 11 plugin gate-tests +
+  `tests/run-gate-tests.sh`): print SKIP, exit 75 as designed — already
+  convention-compliant, no change needed.
+- `tests/deny-only-check.sh`: exit 0, env-independent repo scan — no
+  change needed.
+- `tests/parse-check.sh`: exit 0, env-independent — no change needed.
+- `tests/stub-check.sh`: exit 1 (FAIL), but confirmed env-independent —
+  identical output/exit with `CLAUDE_PLUGIN_ROOT_CORE=/tmp/fake` set.
+  The failure is a real, pre-existing defect unrelated to test-env
+  resolution: it flags `tests/parse-check.sh` itself as a vendored
+  drift copy of a file promoted to core canon (issue-66), per the
+  script's own message. Not masked, not weakened — recorded here as an
+  open finding rather than touched, since it is outside this issue's
+  scope (test-env-resolution convention adoption) and outside the
+  frozen write set.
+
 ## Open findings
-None.
+- `tests/stub-check.sh` fails on this checkout independent of
+  `CLAUDE_PLUGIN_ROOT_CORE`: it flags `tests/parse-check.sh` as a
+  vendored copy of a file now living in core canon (core/hooks/hooks.json),
+  per issue-66. Resolution path: delete the vendored copy and its
+  hooks.json entry under a dedicated issue/proposal for issue-66 — out
+  of scope for issue #37.
 
 ## Next steps
 Commit this change on `issue-37/implementation`, push, and open the
@@ -99,7 +124,9 @@ phase-2 delivery PR with `Closes #37`; set `loop_state: landed` and
 `code_under_review:` to the landing commit sha once committed.
 
 ## Resolution path
-Not applicable — no open findings to resolve.
+`tests/stub-check.sh` finding: delete the vendored `tests/parse-check.sh`
+copy and its `hooks.json` entry under a separate issue-66 proposal — not
+this issue's write set.
 
 ## Rationale for deviations
 None — implementation matches the approved proposal's "What will be
