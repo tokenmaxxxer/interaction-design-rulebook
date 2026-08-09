@@ -21,7 +21,16 @@ Repo-level checks under `tests/`, never installed as plugin hooks.
   matches zero suites, instead of silently reporting a false-green
   `0 passed, 0 failed`. As of issue-30, `ux-design/` itself was renamed
   to `interaction-design/` (directory, install.sh, marketplace.json,
-  README.md, and this file's own path references).
+  README.md, and this file's own path references). As of issue-37, each
+  of the eleven `id-*` plugin suites sources the new
+  `tests/lib/resolve-core.sh` (the on-the-record `test-env-resolution`
+  convention, issue #551) before running any assertion, so a plain
+  checkout with no `CLAUDE_PLUGIN_ROOT_CORE` and no sibling `core/`
+  SKIPs (exit `75`) instead of misleadingly failing; `run-gate-tests.sh`
+  itself now tracks a per-suite exit `75` as "skipped" — distinct from
+  "failed" — and reports the run as skipped/unverifiable (also exit
+  `75`) when every suite skipped, without weakening any assertion that
+  runs when core is reachable.
 - `deny-only-check.sh` — greps for a hook emitting `permissionDecision:
   allow` (gates may only pass through or refuse) and probes that any
   `*-gate.sh` still under `interaction-design/hooks/` refuses an empty

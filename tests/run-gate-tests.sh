@@ -15,15 +15,28 @@
 # replacement suite).
 set -uo pipefail
 
+# issue-37: canonical test-env resolution convention (on-the-record #551,
+# docs/specs/test-env-resolution.md) — a per-suite exit 75 means core was
+# unreachable outside the spawn env, tracked as "skipped", never folded
+# into "failed" (a run that is all-skips must not report false green or
+# false red).
+EX_TEMPFAIL=75
+
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 total=0
 failed=0
+skipped=0
 
 for t in "$repo_root"/interaction-design/plugins/*/tests/*-gate-tests.sh; do
   [ -f "$t" ] || continue
   total=$((total + 1))
   echo "== $t =="
-  if ! /bin/bash "$t"; then
+  /bin/bash "$t"
+  rc=$?
+  if [ "$rc" -eq "$EX_TEMPFAIL" ]; then
+    skipped=$((skipped + 1))
+    echo "-- SKIPPED: $t" >&2
+  elif [ "$rc" -ne 0 ]; then
     failed=$((failed + 1))
     echo "!! FAILED: $t" >&2
   fi
@@ -31,6 +44,14 @@ done
 
 [ "$total" -gt 0 ] || { echo "refused: zero plugin test suites found under interaction-design/plugins/*/tests/ — glob mismatch or missing directory" >&2; exit 2; }
 
-passed=$((total - failed))
-printf '\n== %d passed, %d failed (gates promoted to core canon; see tests/stub-check.sh) ==\n' "$passed" "$failed"
-[ "$failed" -eq 0 ]
+passed=$((total - failed - skipped))
+printf '\n== %d passed, %d failed, %d skipped (gates promoted to core canon; see tests/stub-check.sh) ==\n' "$passed" "$failed" "$skipped"
+
+if [ "$failed" -gt 0 ]; then
+  exit 1
+fi
+if [ "$skipped" -eq "$total" ]; then
+  echo "skipped/unverifiable: core plugin unreachable outside spawn env for every suite" >&2
+  exit "$EX_TEMPFAIL"
+fi
+exit 0

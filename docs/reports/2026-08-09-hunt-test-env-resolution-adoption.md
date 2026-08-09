@@ -43,3 +43,30 @@ the resolver's candidate list from the same source the gate scripts use
 script's fallback path string appears in resolve-core.sh's candidate
 list) so drift between the two lists is caught mechanically instead of
 depending on the author's memory each time a gate script's path changes.
+
+## before-landing — stance 1: assume this change and another plugin's rule cancel each other — find the pair
+
+Verdict: NO FINDING
+Seed: git diff HEAD -- tests/lib/resolve-core.sh interaction-design/plugins/*/tests/*-gate-tests.sh tests/run-gate-tests.sh
+cap_seconds: 120
+tier: default
+diff_stat_lines: ~230 (resolve-core.sh new file ~40 lines; 11 suite files +9 lines each; run-gate-tests.sh +~17/-4)
+started_at: 2026-08-09T09:52:51+09:00
+ended_at: 2026-08-09T09:53:50+09:00
+
+Checked whether the suite-level `export CLAUDE_PLUGIN_ROOT_CORE="$RESOLVED_CORE"`
+added by resolve-core.sh interferes with each suite's own per-command
+`env CLAUDE_PLUGIN_ROOT_CORE=/nonexistent/core-$$ ... bash "$gate"` used in
+the "missing core fails closed" test case (present in all 11 suites).
+Ran the full suite (`bash tests/run-gate-tests.sh`, all 11 suites) and
+individually re-ran id-wireframe-staging's suite: all 11 "missing core
+fails closed" cases still pass (`11 passed, 0 failed, 0 skipped`), because
+`env VAR=x cmd` sets VAR directly in the child's environment table,
+unconditionally overriding the inherited exported value from the parent
+shell — ordinary shell semantics, not something resolve-core.sh's
+suite-level export can defeat. Also grepped the whole repo for any other
+convention reading `CLAUDE_PLUGIN_ROOT` (non-CORE) or a kill-switch var
+that this export could silently satisfy; found none — each plugin's
+kill-switch is its own distinctly-named `ID_<PLUGIN>_GATE_OFF`
+(`ID_WIREFRAME_STAGING_GATE_OFF`, `ID_PROPOSAL_SHAPE_GATE_OFF`, etc.),
+untouched by this change. No cancelling pair found.

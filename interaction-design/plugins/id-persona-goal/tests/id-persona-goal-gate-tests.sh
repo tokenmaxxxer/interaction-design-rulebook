@@ -5,6 +5,15 @@
 # issue-21-interaction-design-gate-machine.md §6 for id-persona-goal.
 set -uo pipefail
 
+# issue-37: canonical test-env resolution convention (on-the-record #551,
+# docs/specs/test-env-resolution.md) -- resolve core here so a missing
+# core surfaces as an explicit SKIP, not a misleading assertion failure.
+_tests_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+_repo_root="$(cd "$_tests_dir/../../../.." && pwd -P)"
+. "$_repo_root/tests/lib/resolve-core.sh"
+resolve_core_or_skip "$_repo_root" || exit $?
+export CLAUDE_PLUGIN_ROOT_CORE="$RESOLVED_CORE"
+
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 GATE="$HERE/../hooks/persona-goal-gate.sh"
 
