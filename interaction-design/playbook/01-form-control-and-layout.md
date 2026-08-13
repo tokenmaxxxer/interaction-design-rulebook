@@ -82,13 +82,28 @@ current task depends on, so do not remove confirmation modals under this
 rule. Source: https://www.nngroup.com/articles/modal-nonmodal-dialog/
 Source: https://www.nngroup.com/articles/popups/
 
+## R8 — semantic token reference by default, even pre-design-system
+When any spec element carries a visual value covered by R5/R6 (a
+contrast-bearing color, a spacing/type value), name the semantic token
+that value maps to (e.g. `color.border.critical`, `space.stack.sm`)
+rather than the raw value, even on a project where no design-system
+document exists yet: name the semantic role a future token is expected
+to fill and flag that reference as provisional. Doing this keeps the
+spec reviewable as token-shaped from the first draft instead of
+producing a raw-value spec that has to be retrofitted once a token
+document lands. Counter-example: a one-off illustrative mockup value
+explicitly marked as non-shipping placeholder content is exempt — this
+rule targets values coding is expected to implement.
+
 ## Rule table (condition -> choice, quick reference)
 R1: 2-4 short options -> radio buttons. R2: 5+ options or tight space ->
 dropdown/listbox. R3: related fields -> tight proximity, single column
 default. R4: >50 destinations, flat-friendly content -> wide/flat nav
 (mega menu). R5: any informational text -> >=4.5:1 (>=3:1 if large). R6:
 meaningful icon/control boundary -> >=3:1. R7: modal on
-non-critical/mid-task/stacked content -> remove, replace inline.
+non-critical/mid-task/stacked content -> remove, replace inline. R8: any
+R5/R6-covered value -> name its semantic token, provisional if
+pre-design-system.
 
 ## Provenance
 Research method: web-verified per rule, THOROUGH tier per issue #1174
